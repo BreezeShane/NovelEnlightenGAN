@@ -1,4 +1,3 @@
-import numpy as np
 from utils import *
 from Config import *
 from torch.autograd import Variable
@@ -30,19 +29,16 @@ def define_G(input_nc, output_nc, ngf, opt, norm='batch', use_dropout=False, gpu
 def define_D(input_nc, ndf, which_model_netD, opt,
              n_layers_D=3, norm='batch', use_sigmoid=False, gpu_ids=[], patch=False):
     netD = None
-    use_gpu = opt.use_gpu
     norm_layer = get_norm_layer(norm_type=norm)
 
-    # todo: Check up which model is used.
-
-    if use_gpu:
+    if opt.use_gpu:
         assert (torch.cuda.is_available())
     if which_model_netD == 'n_layers':
         netD = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer, use_sigmoid=use_sigmoid,
                                    gpu_ids=gpu_ids)
     elif which_model_netD == 'no_norm':
         netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid, gpu_ids=gpu_ids)
-    if use_gpu:
+    if opt.use_gpu:
         netD.cuda(device=gpu_ids[opt.gpu_id])
         netD = torch.nn.DataParallel(netD, gpu_ids)
     netD.apply(weights_init)

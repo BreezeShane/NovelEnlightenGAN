@@ -1,4 +1,3 @@
-from Config import *
 from collections import OrderedDict
 import Networks.VGG as VGG
 import Networks.FCN as FCN
@@ -11,6 +10,7 @@ class Network:
 
     def initialize(self, opt):
         self.opt = opt
+        self.gpu_ids = GPU_IDs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
         self.save_dir = os.path.join(ROOT_PATH, 'Model/')
 
@@ -47,36 +47,32 @@ class Network:
 
         skip = True if opt.skip > 0 else False
         self.netG_A = define_G(opt.input_nc, opt.output_nc,
-                               opt.ngf, opt.which_model_netG, opt, opt.norm, not opt.no_dropout, GPU_IDs, skip=skip)
+                               opt.ngf, opt, opt.norm, not opt.no_dropout, GPU_IDs, skip=skip)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
         #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids, skip=False, opt=opt)
 
         if self.opt.train:
-            self.netD_A = define_D(opt.output_nc, opt.ndf,
-                                   opt.which_model_netD,
+            self.netD_A = define_D(opt.output_nc, opt.ndf, opt.which_model_netD, opt,
                                    opt.n_layers_D, opt.norm, gpu_ids=GPU_IDs, patch=False)
             if self.opt.patchD:
                 self.netD_P = define_D(opt.input_nc, opt.ndf,
-                                       opt.which_model_netD,
+                                       opt.which_model_netD, opt,
                                        opt.n_layers_patchD, opt.norm, gpu_ids=GPU_IDs, patch=True)
         if not self.opt.train or self.opt.continue_train:
             which_epoch = opt.which_epoch
             self.load_network(self.netG_A, 'G_A', which_epoch)
             # self.load_network(self.netG_B, 'G_B', which_epoch)
-            if self.opt.train or self.opt.continue_train:
+            if self.opt.isTrain:
                 self.load_network(self.netD_A, 'D_A', which_epoch)
                 if self.opt.patchD:
                     self.load_network(self.netD_P, 'D_P', which_epoch)
 
-        if self.opt.train or self.opt.continue_train:
+        if self.opt.isTrain:
             self.old_lr = opt.lr
             # self.fake_A_pool = ImagePool(opt.pool_size)
             self.fake_B_pool = ImagePool(opt.pool_size)
             # define loss functions
-            if opt.use_wgan:
-                self.criterionGAN = DiscLossWGANGP()
-            else:
-                self.criterionGAN = GANLoss(use_lsgan=True, tensor=self.Tensor)
+            self.criterionGAN = GANLoss(use_lsgan=True, tensor=self.Tensor)
             self.criterionCycle = torch.nn.MSELoss()
             # self.criterionCycle = torch.nn.L1Loss()
             self.criterionL1 = torch.nn.L1Loss()
@@ -91,12 +87,12 @@ class Network:
         print('---------- Networks initialized -------------')
         print_network(self.netG_A)
         # networks.print_network(self.netG_B)
-        if self.opt.train or self.opt.continue_train:
+        if self.opt.isTrain:
             print_network(self.netD_A)
             if self.opt.patchD:
                 print_network(self.netD_P)
             # networks.print_network(self.netD_B)
-        if self.opt.train or self.opt.continue_train:
+        if self.opt.isTrain:
             self.netG_A.train()
             # self.netG_B.train()
         else:
@@ -105,7 +101,7 @@ class Network:
         print('-----------------------------------------------')
 
     def set_input(self, input):
-        AtoB = self.opt.which_direction == 'AtoB'
+        AtoB = opt.which_direction == 'AtoB'
         input_A = input['A' if AtoB else 'B']
         input_B = input['B' if AtoB else 'A']
         input_img = input['input_img']
@@ -150,7 +146,7 @@ class Network:
 
         real_A = tensor2im(self.real_A.data)
         fake_B = tensor2im(self.fake_B.data)
-        A_gray = atten2im(self.real_A_gray.data) # &&&
+        A_gray = atten2im(self.real_A_gray.data)  # &&&
         # rec_A = util.tensor2im(self.rec_A.data)
         # if self.opt.skip == 1:
         #     latent_real_A = util.tensor2im(self.latent_real_A.data)
@@ -488,3 +484,15 @@ class Network:
 
         print('update learning rate: %f -> %f' % (self.old_lr, lr))
         self.old_lr = lr
+
+    def save_network(self, network, network_label, epoch_label, gpu_ids):
+        save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
+        save_path = os.path.join(self.save_dir, save_filename)
+        torch.save(network.cpu().state_dict(), save_path)
+        if len(gpu_ids) and torch.cuda.is_available():
+            network.cuda(device=gpu_ids[0])
+
+    def load_network(self, network, network_label, epoch_label):
+        save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
+        save_path = os.path.join(self.save_dir, save_filename)
+        network.load_state_dict(torch.load(save_path))

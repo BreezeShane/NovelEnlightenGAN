@@ -2,10 +2,10 @@ import random
 import numpy as np
 import functools
 import torchvision.transforms as transforms
-from Config import *
 from PIL import Image
 import torch.nn as nn
 from torch.autograd import Variable
+from Config import *
 from lib.nn import SynchronizedBatchNorm2d as SynBN2d
 
 
@@ -26,15 +26,6 @@ def make_dataset(dir):
                 images.append(path)
 
     return images
-
-
-def __scale_width(img, target_width):
-    ow, oh = img.size
-    if (ow == target_width):
-        return img
-    w = target_width
-    h = int(target_width * oh / ow)
-    return img.resize((w, h), Image.BICUBIC)
 
 
 def get_transform(opt):
@@ -64,6 +55,31 @@ def get_transform(opt):
                        transforms.Normalize((0.5, 0.5, 0.5),
                                             (0.5, 0.5, 0.5))]
     return transforms.Compose(transform_list)
+
+
+def __scale_width(img, target_width):
+    ow, oh = img.size
+    if (ow == target_width):
+        return img
+    w = target_width
+    h = int(target_width * oh / ow)
+    return img.resize((w, h), Image.BICUBIC)
+
+
+def store_dataset(dir):
+    images = []
+    all_path = []
+    assert os.path.isdir(dir), '%s is not a valid directory' % dir
+
+    for root, _, fnames in sorted(os.walk(dir)):
+        for fname in fnames:
+            if is_image_file(fname):
+                path = os.path.join(root, fname)
+                img = Image.open(path).convert('RGB')
+                images.append(img)
+                all_path.append(path)
+
+    return images, all_path
 
 
 # Data processing

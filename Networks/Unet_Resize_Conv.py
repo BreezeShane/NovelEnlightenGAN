@@ -12,15 +12,12 @@ class Unet_resize_conv(nn.Module):
         self.skip = skip
         p = 1
         # self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
-        if opt.self_attention:
-            self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
-            # self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
-            self.downsample_1 = nn.MaxPool2d(2)
-            self.downsample_2 = nn.MaxPool2d(2)
-            self.downsample_3 = nn.MaxPool2d(2)
-            self.downsample_4 = nn.MaxPool2d(2)
-        else:
-            self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
+        self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
+        # self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
+        self.downsample_1 = nn.MaxPool2d(2)
+        self.downsample_2 = nn.MaxPool2d(2)
+        self.downsample_3 = nn.MaxPool2d(2)
+        self.downsample_4 = nn.MaxPool2d(2)
         self.LReLU1_1 = nn.LeakyReLU(0.2, inplace=True)
         if self.opt.use_norm == 1:
             self.bn1_1 = SynBN2d(32) if self.opt.syn_norm else nn.BatchNorm2d(32)
@@ -140,17 +137,13 @@ class Unet_resize_conv(nn.Module):
             # pass
         input, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(input)
         gray, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(gray)
-        if self.opt.self_attention:
-            gray_2 = self.downsample_1(gray)
-            gray_3 = self.downsample_2(gray_2)
-            gray_4 = self.downsample_3(gray_3)
-            gray_5 = self.downsample_4(gray_4)
+        gray_2 = self.downsample_1(gray)
+        gray_3 = self.downsample_2(gray_2)
+        gray_4 = self.downsample_3(gray_3)
+        gray_5 = self.downsample_4(gray_4)
         if self.opt.use_norm == 1:
-            if self.opt.self_attention:
-                x = self.bn1_1(self.LReLU1_1(self.conv1_1(torch.cat((input, gray), 1))))
-                # x = self.bn1_1(self.LReLU1_1(self.conv1_1(input)))
-            else:
-                x = self.bn1_1(self.LReLU1_1(self.conv1_1(input)))
+            x = self.bn1_1(self.LReLU1_1(self.conv1_1(torch.cat((input, gray), 1))))
+            # x = self.bn1_1(self.LReLU1_1(self.conv1_1(input)))
             conv1 = self.bn1_2(self.LReLU1_2(self.conv1_2(x)))
             x = self.max_pool1(conv1)
 
@@ -167,29 +160,29 @@ class Unet_resize_conv(nn.Module):
             x = self.max_pool4(conv4)
 
             x = self.bn5_1(self.LReLU5_1(self.conv5_1(x)))
-            x = x * gray_5 if self.opt.self_attention else x
+            x = x * gray_5
             conv5 = self.bn5_2(self.LReLU5_2(self.conv5_2(x)))
 
             conv5 = F.upsample(conv5, scale_factor=2, mode='bilinear')
-            conv4 = conv4 * gray_4 if self.opt.self_attention else conv4
+            conv4 = conv4 * gray_4
             up6 = torch.cat([self.deconv5(conv5), conv4], 1)
             x = self.bn6_1(self.LReLU6_1(self.conv6_1(up6)))
             conv6 = self.bn6_2(self.LReLU6_2(self.conv6_2(x)))
 
             conv6 = F.upsample(conv6, scale_factor=2, mode='bilinear')
-            conv3 = conv3 * gray_3 if self.opt.self_attention else conv3
+            conv3 = conv3 * gray_3
             up7 = torch.cat([self.deconv6(conv6), conv3], 1)
             x = self.bn7_1(self.LReLU7_1(self.conv7_1(up7)))
             conv7 = self.bn7_2(self.LReLU7_2(self.conv7_2(x)))
 
             conv7 = F.upsample(conv7, scale_factor=2, mode='bilinear')
-            conv2 = conv2 * gray_2 if self.opt.self_attention else conv2
+            conv2 = conv2 * gray_2
             up8 = torch.cat([self.deconv7(conv7), conv2], 1)
             x = self.bn8_1(self.LReLU8_1(self.conv8_1(up8)))
             conv8 = self.bn8_2(self.LReLU8_2(self.conv8_2(x)))
 
             conv8 = F.upsample(conv8, scale_factor=2, mode='bilinear')
-            conv1 = conv1 * gray if self.opt.self_attention else conv1
+            conv1 = conv1 * gray
             up9 = torch.cat([self.deconv8(conv8), conv1], 1)
             x = self.bn9_1(self.LReLU9_1(self.conv9_1(up9)))
             conv9 = self.LReLU9_2(self.conv9_2(x))
@@ -225,10 +218,7 @@ class Unet_resize_conv(nn.Module):
 
 
         elif self.opt.use_norm == 0:
-            if self.opt.self_attention:
-                x = self.LReLU1_1(self.conv1_1(torch.cat((input, gray), 1)))
-            else:
-                x = self.LReLU1_1(self.conv1_1(input))
+            x = self.LReLU1_1(self.conv1_1(torch.cat((input, gray), 1)))
             conv1 = self.LReLU1_2(self.conv1_2(x))
             x = self.max_pool1(conv1)
 

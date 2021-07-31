@@ -1,13 +1,15 @@
 import time
 import ntpath
-from utils import *
 import data_loader
+from Config import *
 import EnlightenGAN_Network
+from utils import save_image
 
-DataLoader = data_loader.Data_Loader()
+DataLoader = data_loader.DataLoader()
 DataLoader.initialize(opt)
 dataset = DataLoader.load_data()
 GAN_Network = EnlightenGAN_Network.Network()
+GAN_Network.initialize(opt)
 
 def train():
     dataset_size = len(DataLoader)
@@ -26,12 +28,12 @@ def train():
             # if total_steps % opt.display_freq == 0:
             #     visualizer.display_current_results(GAN_Network.get_current_visuals(), epoch)
 
-            if total_steps % opt.print_freq == 0:
-                errors = GAN_Network.get_current_errors(epoch)
-                t = (time.time() - iter_start_time) / opt.batchSize
-                # visualizer.print_current_errors(epoch, epoch_iter, errors, t)
-                # if opt.display_id > 0:
-                #     visualizer.plot_current_errors(epoch, float(epoch_iter) / dataset_size, opt, errors)
+            # if total_steps % opt.print_freq == 0:
+            #     errors = GAN_Network.get_current_errors(epoch)
+            #     t = (time.time() - iter_start_time) / opt.batchSize
+            #     # visualizer.print_current_errors(epoch, epoch_iter, errors, t)
+            #     # if opt.display_id > 0:
+            #     #     visualizer.plot_current_errors(epoch, float(epoch_iter) / dataset_size, opt, errors)
 
             if total_steps % opt.save_latest_freq == 0:
                 print('saving the latest GAN_Network (epoch %d, total_steps %d)' %
