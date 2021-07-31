@@ -1,10 +1,105 @@
-import torch
 import random
+import numpy as np
 import functools
+import torchvision.transforms as transforms
+from Config import *
+from PIL import Image
 import torch.nn as nn
 from torch.autograd import Variable
 from lib.nn import SynchronizedBatchNorm2d as SynBN2d
 
+
+# DataLoader Utils
+
+def is_image_file(filename):
+    return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
+
+
+def make_dataset(dir):
+    images = []
+    assert os.path.isdir(dir), '%s is not a valid directory' % dir
+
+    for root, _, fnames in sorted(os.walk(dir)):
+        for fname in fnames:
+            if is_image_file(fname):
+                path = os.path.join(root, fname)
+                images.append(path)
+
+    return images
+
+
+def __scale_width(img, target_width):
+    ow, oh = img.size
+    if (ow == target_width):
+        return img
+    w = target_width
+    h = int(target_width * oh / ow)
+    return img.resize((w, h), Image.BICUBIC)
+
+
+def get_transform(opt):
+    transform_list = []
+    if opt.resize_or_crop == 'resize_and_crop':
+        zoom = 1 + 0.1 * random.randint(0, 4)
+        osize = [int(400 * zoom), int(600 * zoom)]
+        transform_list.append(transforms.Scale(osize, Image.BICUBIC))
+        transform_list.append(transforms.RandomCrop(opt.fineSize))
+    elif opt.resize_or_crop == 'crop':
+        transform_list.append(transforms.RandomCrop(opt.fineSize))
+    elif opt.resize_or_crop == 'scale_width':
+        transform_list.append(transforms.Lambda(
+            lambda img: __scale_width(img, opt.fineSize)))
+    elif opt.resize_or_crop == 'scale_width_and_crop':
+        transform_list.append(transforms.Lambda(
+            lambda img: __scale_width(img, opt.loadSize)))
+        transform_list.append(transforms.RandomCrop(opt.fineSize))
+        # elif opt.resize_or_crop == 'no':
+    #     osize = [384, 512]
+    #     transform_list.append(transforms.Scale(osize, Image.BICUBIC))
+
+    if opt.isTrain and not opt.no_flip:
+        transform_list.append(transforms.RandomHorizontalFlip())
+
+    transform_list += [transforms.ToTensor(),
+                       transforms.Normalize((0.5, 0.5, 0.5),
+                                            (0.5, 0.5, 0.5))]
+    return transforms.Compose(transform_list)
+
+
+# Data processing
+
+def tensor2im(image_tensor, imtype=np.uint8):
+    image_numpy = image_tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
+    image_numpy = np.maximum(image_numpy, 0)
+    image_numpy = np.minimum(image_numpy, 255)
+    return image_numpy.astype(imtype)
+
+
+def atten2im(image_tensor, imtype=np.uint8):
+    image_tensor = image_tensor[0]
+    image_tensor = torch.cat((image_tensor, image_tensor, image_tensor), 0)
+    image_numpy = image_tensor.cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0))) * 255.0
+    image_numpy = image_numpy / (image_numpy.max() / 255.0)
+    return image_numpy.astype(imtype)
+
+
+def latent2im(image_tensor, imtype=np.uint8):
+    # image_tensor = (image_tensor - torch.min(image_tensor))/(torch.max(image_tensor)-torch.min(image_tensor))
+    image_numpy = image_tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0))) * 255.0
+    image_numpy = np.maximum(image_numpy, 0)
+    image_numpy = np.minimum(image_numpy, 255)
+    return image_numpy.astype(imtype)
+
+
+def save_image(image_numpy, image_path):
+    image_pil = Image.fromarray(image_numpy)
+    image_pil.save(image_path)
+
+
+# Network Utils
 
 def get_norm_layer(norm_type='instance'):
     if norm_type == 'batch':
@@ -68,7 +163,7 @@ def pad_tensor(input):
 
 def pad_tensor_back(input, pad_left, pad_right, pad_top, pad_bottom):
     height, width = input.shape[2], input.shape[3]
-    return input[:,:, pad_top: height - pad_bottom, pad_left: width - pad_right]
+    return input[:, :, pad_top: height - pad_bottom, pad_left: width - pad_right]
 
 
 def print_network(net):
@@ -99,7 +194,7 @@ class ImagePool():
             else:
                 p = random.uniform(0, 1)
                 if p > 0.5:
-                    random_id = random.randint(0, self.pool_size-1)
+                    random_id = random.randint(0, self.pool_size - 1)
                     tmp = self.images[random_id].clone()
                     self.images[random_id] = image
                     return_images.append(tmp)

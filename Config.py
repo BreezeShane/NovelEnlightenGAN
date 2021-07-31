@@ -1,9 +1,13 @@
 import os
-import argparse
 import torch
+import argparse
 
 ROOT_PATH = os.getcwd()
 GPU_IDs = [id for id in range(torch.cuda.device_count())]
+IMG_EXTENSIONS = [
+    '.jpg', '.JPG', '.jpeg', '.JPEG',
+    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
+]
 
 
 # todo: make obj opt for more args
@@ -29,6 +33,8 @@ parser.add_argument("--lr", type=float, default=0.0001)
 parser.add_argument("--syn_norm", type=bool, default=False)
 parser.add_argument("--use_norm", type=float, default=1.0)
 parser.add_argument("--tanh", type=bool, default=False)
+parser.add_argument("--which_model_netD", type=str, default='no_norm')
+parser.add_argument("--which_model_netG", type=str, default='Unet_resize_conv')
 
 opt = parser.parse_args(args=[])
 torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])

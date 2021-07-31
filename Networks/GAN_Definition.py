@@ -5,31 +5,21 @@ from torch.autograd import Variable
 from Networks.Unet_Resize_Conv import Unet_resize_conv
 
 
-def define_G(input_nc, output_nc, ngf, which_model_netG, opt, norm='batch', use_dropout=False, gpu_ids=[], skip=False):
+def define_G(input_nc, output_nc, ngf, opt, norm='batch', use_dropout=False, gpu_ids=[], skip=False):
     netG = None
     use_gpu = opt.use_gpu
     norm_layer = get_norm_layer(norm_type=norm)
 
+
     if use_gpu:
         assert (torch.cuda.is_available())
-
-    # todo: Check up which model is used.
-
-    if which_model_netG == 'unet_128':
-        netG = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                             gpu_ids=gpu_ids)
-    elif which_model_netG == 'unet_256':
-        netG = UnetGenerator(input_nc, output_nc, 8, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                             gpu_ids=gpu_ids, skip=skip, opt=opt)
-    elif which_model_netG == 'unet_512':
-        netG = UnetGenerator(input_nc, output_nc, 9, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                             gpu_ids=gpu_ids, skip=skip, opt=opt)
-    elif which_model_netG == 'sid_unet':
-        netG = UnetGenerator(opt, skip)
-    elif which_model_netG == 'sid_unet_resize':  # It is!
+    if opt.which_model_netG == 'Unet_resize_conv':
         netG = Unet_resize_conv(opt, skip)
-    else:
-        raise NotImplementedError('Generator model name [%s] is not recognized' % which_model_netG)
+    elif opt.which_model_netG == 'unet_512':
+        netG = UnetGenerator(input_nc, output_nc, 9, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
+                         gpu_ids=gpu_ids, skip=skip, opt=opt)
+    elif opt.which_model_netG == 'sid_unet':
+        netG = UnetGenerator(opt, skip)
     if len(gpu_ids) > 0 and opt.use_gpu:
         netG.cuda(device=gpu_ids[opt.gpu_id])
         netG = torch.nn.DataParallel(netG, gpu_ids)
@@ -47,19 +37,11 @@ def define_D(input_nc, ndf, which_model_netD, opt,
 
     if use_gpu:
         assert (torch.cuda.is_available())
-    if which_model_netD == 'basic':
-        netD = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer, use_sigmoid=use_sigmoid,
-                                   gpu_ids=gpu_ids)
-    elif which_model_netD == 'n_layers':
+    if which_model_netD == 'n_layers':
         netD = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer, use_sigmoid=use_sigmoid,
                                    gpu_ids=gpu_ids)
     elif which_model_netD == 'no_norm':
         netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid, gpu_ids=gpu_ids)
-    elif which_model_netD == 'no_norm_4':
-        netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid, gpu_ids=gpu_ids)
-    else:
-        raise NotImplementedError('Discriminator model name [%s] is not recognized' %
-                                  which_model_netD)
     if use_gpu:
         netD.cuda(device=gpu_ids[opt.gpu_id])
         netD = torch.nn.DataParallel(netD, gpu_ids)
