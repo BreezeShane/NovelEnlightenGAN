@@ -40,6 +40,23 @@ parser.add_argument('--high_times', type=int, default=400,
                          help='choose the number of crop for patch discriminator')
 parser.add_argument('--noise', type=float, default=0, help='variance of noise')
 parser.add_argument('--input_linear', action='store_true', help='lieanr scaling input')
+parser.add_argument('--times_residual', action='store_true', help='output = input + residual*attention')
+parser.add_argument('--linear_add', action='store_true', help='lieanr scaling input')
+parser.add_argument('--latent_threshold', action='store_true', help='lieanr scaling input')
+parser.add_argument('--latent_norm', action='store_true', help='lieanr scaling input')
+parser.add_argument('--linear', action='store_true', help='tanh')
+parser.add_argument('--patchSize', type=int, default=32, help='then crop to this size')
+parser.add_argument('--patchD_3', type=int, default=0, help='choose the number of crop for patch discriminator')
+parser.add_argument('--use_wgan', type=float, default=0, help='use wgan-gp')
+parser.add_argument('--use_ragan', action='store_true', help='use ragan')
+parser.add_argument('--hybrid_loss', action='store_true', help='use lsgan and ragan separately')
+parser.add_argument('--D_P_times2', action='store_true', help='loss_D_P *= 2')
+parser.add_argument('--IN_vgg', action='store_true', help='patch vgg individual')
+parser.add_argument('--vgg_mean', action='store_true', help='substract mean in vgg loss')
+parser.add_argument('--vgg_choose', type=str, default='relu5_3', help='choose layer for vgg')
+parser.add_argument('--vgg_maxpooling', action='store_true', help='normalize attention map')
+parser.add_argument('--patch_vgg', action='store_true', help='use vgg loss between each patch')
+parser.add_argument('--new_lr', action='store_true', help='tanh')
 
 # Train args
 
@@ -61,7 +78,9 @@ parser.add_argument('--n_layers_patchD', type=int, default=3)
 parser.add_argument('--pool_size', type=int, default=50,
                          help='the size of image buffer that stores previously generated images')
 parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
-
+parser.add_argument('--save_latest_freq', type=int, default=5000, help='frequency of saving the latest results')
+parser.add_argument('--save_epoch_freq', type=int, default=5,
+                         help='frequency of saving checkpoints at the end of epochs')
 
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train

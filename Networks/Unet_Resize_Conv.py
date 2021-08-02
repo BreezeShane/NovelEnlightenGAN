@@ -141,6 +141,7 @@ class Unet_resize_conv(nn.Module):
         gray_3 = self.downsample_2(gray_2)
         gray_4 = self.downsample_3(gray_3)
         gray_5 = self.downsample_4(gray_4)
+        # todo: Change F.upsample to nn.functional.interpolate &&&
         if self.opt.use_norm == 1:
             x = self.bn1_1(self.LReLU1_1(self.conv1_1(torch.cat((input, gray), 1))))
             # x = self.bn1_1(self.LReLU1_1(self.conv1_1(input)))

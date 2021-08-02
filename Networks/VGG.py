@@ -1,15 +1,14 @@
-import os
-import torch
-import torch.nn as nn
-from torch.autograd import Variable
 from Config import *
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 def load_vgg16(opt, model_dir, gpu_ids):
     """ Use the model from https://github.com/abhiskk/fast-neural-style/blob/master/neural_style/utils.py """
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
-    if not os.path.exists(os.path.join(model_dir, '../Model/VGG/')):
+    if not os.path.exists(model_dir + 'vgg16.weight'):
 
         # todo: Output this error when build up the website &&&
         print(f"Error: vgg16.weight doesn't exist! Please download vgg16.weight and then put it in {ROOT_PATH}/Model/VGG/ !")
