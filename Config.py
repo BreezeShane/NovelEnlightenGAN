@@ -88,4 +88,3 @@ parser.add_argument("--use_models",action='store_true')
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
 torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
-metrics = Metrics()

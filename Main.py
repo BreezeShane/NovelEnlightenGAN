@@ -2,13 +2,13 @@ import time
 import ntpath
 from Config import *
 from Networks import EnlightenGAN_Network
-from utils import save_image, data_loader
-from utils.Metrics import *
+from utils.utils import save_image
+from utils import data_loader
+
 
 DataLoader = data_loader.DataLoader()
 dataset = DataLoader.load_data()
 GAN_Network = EnlightenGAN_Network.Network()
-Global_Metrics = Metrics()
 
 
 def train():
