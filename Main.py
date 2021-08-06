@@ -12,7 +12,7 @@ GAN_Network = EnlightenGAN_Network.Network()
 
 
 def train():
-    dataset_size = len(DataLoader)
+    # dataset_size = len(DataLoader)
     total_steps = 0
 
     for epoch in range(1, opt.niter + opt.niter_decay + 1):
