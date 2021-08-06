@@ -18,9 +18,9 @@ def train():
     for epoch in range(1, opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
         for i, data in enumerate(dataset):
-            iter_start_time = time.time()
+            # iter_start_time = time.time()
             total_steps += opt.batchSize
-            epoch_iter = total_steps - dataset_size * (epoch - 1)
+            # epoch_iter = total_steps - dataset_size * (epoch - 1)
             GAN_Network.set_input(data)
             GAN_Network.optimize_parameters(epoch)
 
