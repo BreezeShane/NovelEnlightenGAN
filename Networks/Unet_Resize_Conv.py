@@ -1,5 +1,5 @@
 import torch.nn.functional as F
-from utils import *
+from utils.utils import *
 from lib.nn import SynchronizedBatchNorm2d as SynBN2d
 
 

@@ -1,4 +1,4 @@
-from utils import *
+from utils.utils import *
 from Config import *
 from torch.autograd import Variable
 from Networks.Unet_Resize_Conv import Unet_resize_conv

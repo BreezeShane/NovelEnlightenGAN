@@ -1,3 +1,4 @@
+from utils.Metrics import *
 import os
 import torch
 import argparse
@@ -8,7 +9,6 @@ IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
-
 
 # todo: make obj opt for more args
 parser = argparse.ArgumentParser(prefix_chars='-_')
@@ -37,7 +37,7 @@ parser.add_argument('--vary', type=int, default=1, help='use light data augmenta
 parser.add_argument('--low_times', type=int, default=200, help='choose the number of crop for patch discriminator')
 parser.add_argument('--lighten', action='store_true', help='normalize attention map')
 parser.add_argument('--high_times', type=int, default=400,
-                         help='choose the number of crop for patch discriminator')
+                    help='choose the number of crop for patch discriminator')
 parser.add_argument('--noise', type=float, default=0, help='variance of noise')
 parser.add_argument('--input_linear', action='store_true', help='lieanr scaling input')
 parser.add_argument('--times_residual', action='store_true', help='output = input + residual*attention')
@@ -76,12 +76,16 @@ parser.add_argument('--use_avgpool', type=float, default=0)
 parser.add_argument('--n_layers_D', type=int, default=3)
 parser.add_argument('--n_layers_patchD', type=int, default=3)
 parser.add_argument('--pool_size', type=int, default=50,
-                         help='the size of image buffer that stores previously generated images')
+                    help='the size of image buffer that stores previously generated images')
 parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
 parser.add_argument('--save_latest_freq', type=int, default=5000, help='frequency of saving the latest results')
 parser.add_argument('--save_epoch_freq', type=int, default=5,
-                         help='frequency of saving checkpoints at the end of epochs')
+                    help='frequency of saving checkpoints at the end of epochs')
+
+# Test args
+parser.add_argument("--use_models",action='store_true')
 
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
 torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
+metrics = Metrics()

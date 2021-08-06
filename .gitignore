@@ -6,3 +6,5 @@ lib/nn/modules/__pycache__
 lib/nn/parallel/__pycache__
 __pycache__/*
 Model/*
+.idea
+Metrics.md

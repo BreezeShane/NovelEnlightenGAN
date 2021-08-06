@@ -1,15 +1,15 @@
 import time
 import ntpath
-import data_loader
 from Config import *
-import EnlightenGAN_Network
-from utils import save_image
+from Networks import EnlightenGAN_Network
+from utils import save_image, data_loader
+from utils.Metrics import *
 
 DataLoader = data_loader.DataLoader()
-DataLoader.initialize(opt)
 dataset = DataLoader.load_data()
 GAN_Network = EnlightenGAN_Network.Network()
-GAN_Network.initialize(opt)
+Global_Metrics = Metrics()
+
 
 def train():
     dataset_size = len(DataLoader)
@@ -66,7 +66,7 @@ def train():
                 GAN_Network.update_learning_rate()
 
 
-def predict():
+def predict(image_dir=os.path.join(ROOT_PATH, 'Data/Results/')):
     for i, data in enumerate(dataset):
         GAN_Network.set_input(data)
         visuals = GAN_Network.predict()
@@ -78,7 +78,6 @@ def predict():
         links = []
         short_path = ntpath.basename(img_path[0])
         name = os.path.splitext(short_path)[0]
-        image_dir = os.path.join(ROOT_PATH, 'Results/')
         if not os.path.exists(image_dir):
             os.mkdir(image_dir)
         for label, image_numpy in visuals.items():
@@ -94,8 +93,15 @@ def predict():
 
 if __name__ == '__main__':
     if opt.train:
-        # todo: save train images & port them to the website
+        # todo: post them to the website
         train()
     elif opt.predict:
-        # todo: save test images & port them to the website
-        predict()
+        # todo: post them to the website
+        if opt.use_models:
+            image_dir = os.path.join(ROOT_PATH, 'Data/Results/')
+            for iteration in range(5, 1000 + 5, 5):
+                save_image_path = image_dir + str(iteration) + '/'
+                predict(save_image_path)
+            predict(image_dir+'Latest/')
+        else:
+            predict()
