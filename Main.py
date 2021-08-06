@@ -4,7 +4,7 @@ from Config import *
 from Networks import EnlightenGAN_Network
 from utils.utils import save_image
 from utils import data_loader
-
+import utils.Metrics as Metrics
 
 DataLoader = data_loader.DataLoader()
 dataset = DataLoader.load_data()
@@ -66,7 +66,7 @@ def train():
                 GAN_Network.update_learning_rate()
 
 
-def predict(image_dir=os.path.join(ROOT_PATH, 'Data/Results/')):
+def predict(image_dir=os.path.join(ROOT_PATH, 'Data/Results/'), file_name='Latest.txt'):
     for i, data in enumerate(dataset):
         GAN_Network.set_input(data)
         visuals = GAN_Network.predict()
@@ -88,7 +88,25 @@ def predict(image_dir=os.path.join(ROOT_PATH, 'Data/Results/')):
             ims.append(image_name)
             txts.append(label)
             links.append(image_name)
+        use_metrics(image_dir, file_name)
         # visualizer.save_images(webpage, visuals, img_path)
+
+
+def use_metrics(save_image_path, file_name):
+    MAE = Metrics.Compute_MAE()
+    MSE = Metrics.Compute_MSE()
+    LOE = Metrics.Compute_LOE()
+    NIMA = Metrics.Compute_NIMA()
+    NIQE = Metrics.Compute_NIQE()
+    LPIPS = Metrics.Compute_LPIPS()
+    PSNR = Metrics.Compute_PSNR()
+    SPAQ = Metrics.Compute_SPAQ()
+    SSIM = Metrics.Compute_SSIM()
+    name_list = ['MAE', 'MSE', 'LOE', 'NIMA', 'NIQE', 'LPIPS', 'PSNR', 'SPAQ', 'SSIM']
+    value_list = [MAE, MSE, LOE, NIMA, NIQE, LPIPS, PSNR, SPAQ, SSIM]
+    with open(os.path.join(save_image_path, file_name)) as fp:
+        for name, value in name_list, value_list:
+            fp.write(name + ': ' + str(value) + '\n')
 
 
 if __name__ == '__main__':
@@ -98,10 +116,14 @@ if __name__ == '__main__':
     elif opt.predict:
         # todo: post them to the website
         if opt.use_models:
-            image_dir = os.path.join(ROOT_PATH, 'Data/Results/')
+            image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Results')
             for iteration in range(5, 1000 + 5, 5):
-                save_image_path = image_dir + str(iteration) + '/'
-                predict(save_image_path)
-            predict(image_dir+'Latest/')
+                opt.which_epoch = str(iteration)
+                if not os.path.exists(os.path.join(image_dir, '%s' % iteration)):
+                    os.mkdir(os.path.join(image_dir, '%s' % iteration))
+                save_image_path = os.path.join(image_dir, '%s' % iteration)
+                file_name = str(iteration) + '.txt'
+                predict(image_dir=save_image_path, file_name=file_name)
+            predict(image_dir=os.path.join(image_dir, 'Latest'))
         else:
             predict()
