@@ -1,7 +1,6 @@
-import os
-import torch
 import numpy as np
 import torch.nn as nn
+from Config import *
 from Networks.VGG import vgg_preprocess
 
 
@@ -132,11 +131,9 @@ def load_fcn(opt, model_dir, gpu_ids):
     fcn = FCN32s()
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
-    if not os.path.exists(os.path.join(model_dir, 'Model/FCN/')):
-
+    if not os.path.exists(os.path.join(model_dir, 'fcn32s_from_caffe.pth')):
         # todo: Output this error when build up the website &&&
         print(f"Error: fcn32s_from_caffe.pth doesn't exist! Please download fcn32s_from_caffe.pth and then put it in {ROOT_PATH}/Model/FCN/ !")
-
         return None
     fcn.load_state_dict(torch.load(os.path.join(model_dir, 'fcn32s_from_caffe.pth')))
     if opt.use_gpu:

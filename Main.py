@@ -1,17 +1,17 @@
 import time
 import ntpath
+from PIL import Image
 from Config import *
+from torchvision import transforms
 from Networks import EnlightenGAN_Network
 from utils.utils import save_image
 from utils import data_loader
-import utils.Metrics as Metrics
-
-DataLoader = data_loader.DataLoader()
-dataset = DataLoader.load_data()
-GAN_Network = EnlightenGAN_Network.Network()
 
 
 def train():
+    DataLoader = data_loader.DataLoader()
+    dataset = DataLoader.load_data()
+    GAN_Network = EnlightenGAN_Network.Network()
     # dataset_size = len(DataLoader)
     total_steps = 0
 
@@ -66,47 +66,34 @@ def train():
                 GAN_Network.update_learning_rate()
 
 
-def predict(image_dir=os.path.join(ROOT_PATH, 'Data/Results/'), file_name='Latest.txt'):
-    for i, data in enumerate(dataset):
-        GAN_Network.set_input(data)
+def predict(image_list: list, user_ip: str, isWeb=False):
+    imgs = []
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+    for image_path in image_list:
+        img = Image.open(image_path).convert('RGB')
+        img = transform(img)
+        img_input = torch.unsqueeze(img, 0)
+        r, g, b = img[0] + 1, img[1] + 1, img[2] + 1
+        gray = 1. - (0.299 * r + 0.587 * g + 0.114 * b) / 2.
+        gray = torch.unsqueeze(gray, 0).unsqueeze(0)
+        img_with_gray_and_path = [img_input, gray, image_path]
+        imgs.append(img_with_gray_and_path)
+    GAN_Network = EnlightenGAN_Network.Network()
+    for data in imgs:
+        GAN_Network.set_input_single(data)
         visuals = GAN_Network.predict()
-        img_path = GAN_Network.get_image_paths()
-        print('process image... %s' % img_path)
-        print('=' * 255)
-        ims = []
-        txts = []
-        links = []
-        short_path = ntpath.basename(img_path[0])
+        print('process image %s' % data[2])
+        short_path = ntpath.basename(data[2])
         name = os.path.splitext(short_path)[0]
-        if not os.path.exists(image_dir):
-            os.mkdir(image_dir)
+        if isWeb:
+            image_dir = os.path.join(ROOT_PATH, 'front-end', 'Static_Files', 'downloads', user_ip)
+        else:
+            image_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
         for label, image_numpy in visuals.items():
-            image_name = '%s_%s.png' % (name, label)
-            save_path = os.path.join(image_dir, image_name)
-            save_image(image_numpy, save_path)
-
-            ims.append(image_name)
-            txts.append(label)
-            links.append(image_name)
-        use_metrics(image_dir, file_name)
-        # visualizer.save_images(webpage, visuals, img_path)
-
-
-def use_metrics(save_image_path, file_name):
-    MAE = Metrics.Compute_MAE()
-    MSE = Metrics.Compute_MSE()
-    LOE = Metrics.Compute_LOE()
-    NIMA = Metrics.Compute_NIMA()
-    NIQE = Metrics.Compute_NIQE()
-    LPIPS = Metrics.Compute_LPIPS()
-    PSNR = Metrics.Compute_PSNR()
-    SPAQ = Metrics.Compute_SPAQ()
-    SSIM = Metrics.Compute_SSIM()
-    name_list = ['MAE', 'MSE', 'LOE', 'NIMA', 'NIQE', 'LPIPS', 'PSNR', 'SPAQ', 'SSIM']
-    value_list = [MAE, MSE, LOE, NIMA, NIQE, LPIPS, PSNR, SPAQ, SSIM]
-    with open(os.path.join(save_image_path, file_name)) as fp:
-        for name, value in name_list, value_list:
-            fp.write(name + ': ' + str(value) + '\n')
+            save_image(image_numpy, image_dir, name, label)
 
 
 if __name__ == '__main__':
@@ -115,15 +102,16 @@ if __name__ == '__main__':
         train()
     elif opt.predict:
         # todo: post them to the website
-        if opt.use_models:
-            image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Results')
-            for iteration in range(5, 1000 + 5, 5):
-                opt.which_epoch = str(iteration)
-                if not os.path.exists(os.path.join(image_dir, '%s' % iteration)):
-                    os.mkdir(os.path.join(image_dir, '%s' % iteration))
-                save_image_path = os.path.join(image_dir, '%s' % iteration)
-                file_name = str(iteration) + '.txt'
-                predict(image_dir=save_image_path, file_name=file_name)
-            predict(image_dir=os.path.join(image_dir, 'Latest'))
-        else:
-            predict()
+        # if opt.use_models:
+        #     image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Results')
+        #     for iteration in range(5, 1000 + 5, 5):
+        #         opt.which_epoch = str(iteration)
+        #         if not os.path.exists(os.path.join(image_dir, '%s' % iteration)):
+        #             os.mkdir(os.path.join(image_dir, '%s' % iteration))
+        #         save_image_path = os.path.join(image_dir, '%s' % iteration)
+        #         file_name = str(iteration) + '.txt'
+        #         predict(image_dir=save_image_path, file_name=file_name)
+        #     predict(image_dir=os.path.join(image_dir, 'Latest'))
+        # else:
+        #     predict()
+        pass

@@ -4,21 +4,15 @@ from torch.autograd import Variable
 from Networks.Unet_Resize_Conv import Unet_resize_conv
 
 
-def define_G(input_nc, output_nc, ngf, opt, norm='batch', use_dropout=False, gpu_ids=[], skip=False):
+def define_G(opt, gpu_ids=[], skip=False):
     netG = None
     use_gpu = opt.use_gpu
-    norm_layer = get_norm_layer(norm_type=norm)
-
 
     if use_gpu:
         assert (torch.cuda.is_available())
-    if opt.which_model_netG == 'Unet_resize_conv':
-        netG = Unet_resize_conv(opt, skip)
-    elif opt.which_model_netG == 'unet_512':
-        netG = UnetGenerator(input_nc, output_nc, 9, ngf, norm_layer=norm_layer, use_dropout=use_dropout,
-                         gpu_ids=gpu_ids, skip=skip, opt=opt)
-    elif opt.which_model_netG == 'sid_unet':
-        netG = UnetGenerator(opt, skip)
+
+    netG = Unet_resize_conv(opt, skip)
+
     if len(gpu_ids) > 0 and opt.use_gpu:
         netG.cuda(device=gpu_ids[opt.gpu_id])
         netG = torch.nn.DataParallel(netG, gpu_ids)
@@ -120,7 +114,7 @@ class DiscLossWGANGP():
 
 # Defines the Unet generator.
 # |num_downs|: number of downsamplings in UNet. For example,
-# if |num_downs| == 7, image of size 128x128 will become of size 1x1
+# if |num_downs| == 7, images of size 128x128 will become of size 1x1
 # at the bottleneck
 class UnetGenerator(nn.Module):
     def __init__(self, input_nc, output_nc, num_downs, ngf=64,

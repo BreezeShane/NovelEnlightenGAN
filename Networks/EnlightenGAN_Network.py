@@ -9,7 +9,7 @@ class Network:
         self.opt = opt
         self.gpu_ids = GPU_IDs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
-        self.save_dir = os.path.join(ROOT_PATH, '../Model/')
+        self.save_dir = os.path.join(ROOT_PATH, 'Model/')
 
         nb = opt.batchSize
         size = opt.fineSize
@@ -27,14 +27,14 @@ class Network:
                     self.vgg_patch_loss.cuda()
             if opt.use_gpu:
                 self.vgg_loss.cuda()
-            self.vgg = VGG.load_vgg16(opt, ROOT_PATH + "/Model/VGG/", GPU_IDs)
+            self.vgg = VGG.load_vgg16(opt, os.path.join(ROOT_PATH, "Model/VGG/"), GPU_IDs)
             self.vgg.eval()
             for param in self.vgg.parameters():
                 param.requires_grad = False
         elif opt.fcn > 0:
             self.fcn_loss = FCN.SemanticLoss(opt)
             self.fcn_loss.cuda()
-            self.fcn = FCN.load_fcn(opt, "../Model/FCN/", GPU_IDs)
+            self.fcn = FCN.load_fcn(opt, os.path.join(ROOT_PATH, "Model/FCN/"), GPU_IDs)
             self.fcn.eval()
             for param in self.fcn.parameters():
                 param.requires_grad = False
@@ -43,19 +43,18 @@ class Network:
         # Code (paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
 
         skip = True if opt.skip > 0 else False
-        self.netG_A = define_G(opt.input_nc, opt.output_nc,
-                               opt.ngf, opt, opt.norm, not opt.no_dropout, GPU_IDs, skip=skip)
+        self.netG_A = define_G(opt, GPU_IDs, skip=skip)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
         #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids, skip=False, opt=opt)
 
-        if self.opt.train:
+        if self.opt.isTrain:
             self.netD_A = define_D(opt.output_nc, opt.ndf, opt.which_model_netD, opt,
                                    opt.n_layers_D, opt.norm, gpu_ids=GPU_IDs, patch=False)
             if self.opt.patchD:
                 self.netD_P = define_D(opt.input_nc, opt.ndf,
                                        opt.which_model_netD, opt,
                                        opt.n_layers_patchD, opt.norm, gpu_ids=GPU_IDs, patch=True)
-        if not self.opt.train or self.opt.continue_train:
+        if not self.opt.isTrain or self.opt.continue_train:
             which_epoch = opt.which_epoch
             self.load_network(self.netG_A, 'G_A', which_epoch)
             # self.load_network(self.netG_B, 'G_B', which_epoch)
@@ -109,6 +108,15 @@ class Network:
         self.input_img.resize_(input_img.size()).copy_(input_img)
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
+    def set_input_single(self, input_image): #, image_list):
+        input_img = input_image[0]
+        input_A = input_image[0]
+        input_A_gray = input_image[1]
+        self.input_A.resize_(input_A.size()).copy_(input_A)
+        self.input_A_gray.resize_(input_A_gray.size()).copy_(input_A_gray)
+        self.input_img.resize_(input_img.size()).copy_(input_img)
+        # self.image_paths = image_list
+
     def test(self):
         self.real_A = Variable(self.input_A, volatile=True)
         self.real_A_gray = Variable(self.input_A_gray, volatile=True)
@@ -140,8 +148,7 @@ class Network:
         else:
             self.fake_B = self.netG_A.forward(self.real_A, self.real_A_gray)
         # self.rec_A = self.netG_B.forward(self.fake_B)
-
-        real_A = tensor2im(self.real_A.data)
+        # # real_A = tensor2im(self.real_A.data)
         fake_B = tensor2im(self.fake_B.data)
         A_gray = atten2im(self.real_A_gray.data)  # &&&
         # rec_A = util.tensor2im(self.rec_A.data)
@@ -153,10 +160,10 @@ class Network:
         #                     ('latent_show', latent_show), ('max_image', max_image), ('A_gray', A_gray)])
         # else:
         #     return OrderedDict([('real_A', real_A), ('fake_B', fake_B)])
-        # return OrderedDict([('fake_B', fake_B)])
-        return OrderedDict([('real_A', real_A), ('fake_B', fake_B)])
+        return OrderedDict([('fake_B', fake_B)])
+        # return OrderedDict([('real_A', real_A), ('fake_B', fake_B)])
 
-    # get image paths
+    # get images paths
     def get_image_paths(self):
         return self.image_paths
 

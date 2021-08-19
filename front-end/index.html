@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns="http://www.w3.org/1999/html">
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>EnlightenGAN-Ω</title>
@@ -7,10 +7,11 @@
         .image {
             height: 400px;
             width: 750px;
+            object-fit: fill;
         }
 
         body {
-            background-image: url("/front-end/Asserts/bg-img.jpg");
+            background-image: url("/Static_Files/Asserts/bg-img.jpg");
             background-position: center center;
             background-attachment: fixed;
             background-size: cover;
@@ -26,8 +27,17 @@
             -moz-transform: translate(-50%, -50%);
             transform: translate(-50%, -50%);
         }
+
+        #footer {
+            position: fixed;
+            top: 85%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            -moz-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
     </style>
-    <script src="lib/jquery-3.6.0.min.js"></script>
+    <script src="Static_Files/lib/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <div id="main">
@@ -39,26 +49,143 @@
     <br>
     <div style="text-align: center;  display: flex;justify-content: space-around; ">
         <div style="text-align: center; ">
-            <img class="image" src="/front-end/Asserts/404.jpg" style="opacity: 0.75; filter: alpha(opacity=75); " alt="请点击上传图像以选择需要增强的图片「支持批量」"><br>
+            <img id="Before" class="image" src="/Static_Files/Asserts/404.jpg"
+                 style="opacity: 0.75; filter: alpha(opacity=75); " alt="请点击上传图像以选择需要增强的图片「支持批量」"><br>
             <span style="font-size: 25px; color: snow; font-weight: bolder; ">请点击上传图像以选择需要增强的图片「支持批量」</span><br>
-            <button id="upload" style="font-size: 25px; font-weight: bold; ">上传图片</button>
+            <!--            <button id="upload" style="font-size: 25px; font-weight: bold; " onclick="files.click()">上传图片</button>-->
+            <form id="UploadForm" enctype="multipart/form-data" style="text-align: center; ">
+                <input type="button" id="upload" value="上传图片" style="font-size: 25px; font-weight: bold; "><br>
+                <input type="file" id="files" name="upload_files" style="visibility: hidden" multiple="multiple">
+            </form>
         </div>
         <div style="text-align: center; ">
-            <img class="image" src="/front-end/Asserts/404.jpg" style="opacity: 0.35; filter: alpha(opacity=35); " alt="照度增强的结果将在这里显示！"><br>
-            <span style="font-size: 25px; color: snow; font-weight: bold; ">照度增强的结果将在这里显示！</span><br>
+            <img id="After" class="image" src="/Static_Files/Asserts/404.jpg"
+                 style="opacity: 0.35; filter: alpha(opacity=35); " alt="照度增强的结果将在这里显示！"><br>
+            <span style="font-size: 25px; color: snow; font-weight: bold; ">照度增强的结果将在这里显示！</span>
+            <a id="download_link" href="" download="enlightened_images.zip" style="font-size: 25px; font-weight: bold;">批量下载</a><br>
             <button id="start" style="font-size: 25px; font-weight: bold; ">开始增强</button>
         </div>
     </div>
 </div>
-<script>
-    $("#upload").on("click", Up_load);
-    function Up_load(){
 
-    }
-    $("#start").on("click", Start);
-    function Start(){
+<div id="footer" style="text-align: center; visibility: hidden;">
+    <span id="checker" style="font-size: 25px; color: snow; font-weight: bold;">当前是第1张</span><br>
+    <button id="last" style="height: 50px; width: 100px; font-size: 25px;">上一张</button>
+    <button id="next" style="height: 50px; width: 100px; font-size: 25px;">下一张</button>
+</div>
+<script type="text/javascript">
+    var formData = new FormData();
+    var file_num = 0;
+    var d, D;
+    var index = 0;
 
+    $("#upload").on("click", file_open);
+    $("#start").on("click", start_predict);
+    // $("#download_link").on("click", download);
+
+    $("#last").on("click", function () {
+        if (index === 0) {
+            index = file_num
+        }
+        index -= 1;
+        $('#Before').attr('src', d.file_url[index % file_num]);
+        $('#After').attr('src', D.file_url[index % file_num]);
+        $("#checker").html("当前是第" + (index % file_num + 1).toString() + "张")
+    })
+    $("#next").on("click", function () {
+        index += 1;
+        $('#Before').attr('src', d.file_url[index % file_num]);
+        $('#After').attr('src', D.file_url[index % file_num]);
+        $("#checker").html("当前是第" + (index % file_num + 1).toString() + "张")
+    })
+
+    $('#files').on("change", function () {
+        var fileList = this.files
+        for (var i = 0; i < fileList.length; i++) {
+            formData.append('file', fileList[i]);
+        }
+        file_num = fileList.length
+        if (file_num === 0) {
+            alert("请选择文件！")
+        } else {
+            if (file_num > 1) {
+                $(".change").attr('style', 'height: 50px;width: 100px;font-size: 25px;visibility: visible;')
+            }
+            $.ajax({
+                url: "/upload_files",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    d = JSON.parse(data)
+                    $('#Before').attr('src', d.file_url[0]);
+                    $('#Before').attr('style', '');
+                },
+                error: function () {
+                    alert("上传失败");
+                }
+            })
+        }
+    });
+
+    function file_open() {
+        formData = new FormData();
+        $('#footer').attr('style', 'text-align: center; visibility: hidden;');
+        $('#Before').attr('src', '/Static_Files/Asserts/404.jpg');
+        $('#Before').attr('style', 'opacity: 0.75; filter: alpha(opacity=75); ');
+        $('#After').attr('src', '/Static_Files/Asserts/404.jpg');
+        $('#After').attr('style', 'opacity: 0.35; filter: alpha(opacity=35); ');
+        index = 0;
+        $("#checker").html("当前是第" + (index % file_num + 1).toString() + "张")
+        $("#files").click()
     }
+
+    function start_predict() {
+        if (file_num > 0) {
+            $.ajax({
+                url: "/start_predict",
+                type: "POST",
+                data: JSON.stringify(d),
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                success: function (data) {
+                    // D = JSON.parse(data)
+                    D = data
+                    if (D.Status === 'Error'){
+                        alert(D.Message);
+                    } else {
+                        $('#After').attr('src', D.file_url[0]);
+                        $('#After').attr('style', '');
+                        $("#footer").attr('style', "text-align: center; visibility: visible;")
+                        $("#checker").html("当前是第" + (index % file_num + 1).toString() + "张")
+                        $("#download_link").attr('href', '/Static_Files/downloads/'+ D.user_ip +'/download.zip')
+                    }
+                },
+                error: function () {
+                    alert("增强失败，请联系管理员！");
+                }
+            })
+        } else {
+            alert("请先上传文件！")
+        }
+    }
+
+    // function download() {
+    //     $.ajax({
+    //             url: "/download_images",
+    //             type: "POST",
+    //             processData: false,
+    //             contentType: false,
+    //             success: function (data) {
+    //                 $("#download_link").attr('href', '')
+    //                 $("#download_link").attr('download', 'enlightened_images.zip')
+    //             },
+    //             error: function () {
+    //                 alert("增强失败，请联系管理员！");
+    //             }
+    //     })
+    // }
 </script>
 </body>
 </html>
