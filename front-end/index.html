@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>EnlightenGAN-Ω</title>
+    <style>
+        .image {
+            height: 400px;
+            width: 750px;
+        }
+
+        body {
+            background-image: url("/front-end/Asserts/bg-img.jpg");
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: cover;
+            margin: 0;
+            position: relative;
+        }
+
+        #main {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            -webkit-transform: translate(-50%, -50%);
+            -moz-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    <script src="lib/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div id="main">
+    <div style="text-align: center; ">
+    <span style="font-size: 50px; color: #FFFFFF; font-style: italic; font-family: STLiti">
+    欢迎使用EnlightenGAN-Ω！
+          </span>
+    </div>
+    <br>
+    <div style="text-align: center;  display: flex;justify-content: space-around; ">
+        <div style="text-align: center; ">
+            <img class="image" src="/front-end/Asserts/404.jpg" style="opacity: 0.75; filter: alpha(opacity=75); " alt="请点击上传图像以选择需要增强的图片「支持批量」"><br>
+            <span style="font-size: 25px; color: snow; font-weight: bolder; ">请点击上传图像以选择需要增强的图片「支持批量」</span><br>
+            <button id="upload" style="font-size: 25px; font-weight: bold; ">上传图片</button>
+        </div>
+        <div style="text-align: center; ">
+            <img class="image" src="/front-end/Asserts/404.jpg" style="opacity: 0.35; filter: alpha(opacity=35); " alt="照度增强的结果将在这里显示！"><br>
+            <span style="font-size: 25px; color: snow; font-weight: bold; ">照度增强的结果将在这里显示！</span><br>
+            <button id="start" style="font-size: 25px; font-weight: bold; ">开始增强</button>
+        </div>
+    </div>
+</div>
+<script>
+    $("#upload").on("click", Up_load);
+    function Up_load(){
+
+    }
+    $("#start").on("click", Start);
+    function Start(){
+
+    }
+</script>
+</body>
+</html>
