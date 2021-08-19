@@ -142,6 +142,8 @@
     }
 
     function start_predict() {
+        $("#After").attr('src', '/Static_Files/Asserts/Processing.png');
+        $('#After').attr('style', 'opacity: 0.75; filter: alpha(opacity=75); ');
         if (file_num > 0) {
             $.ajax({
                 url: "/start_predict",
