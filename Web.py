@@ -99,3 +99,7 @@ def start_predict():
 # ----------------------------------------------------------------------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8531)
+
+# todo: fix up the bug:
+#  When user secondly upload data the same to the first,
+#  uploaded images won't be deployed.

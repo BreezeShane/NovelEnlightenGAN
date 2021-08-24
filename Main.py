@@ -8,14 +8,20 @@ from utils.utils import save_image
 from utils import data_loader
 
 
-def train():
+def train(mode):
     DataLoader = data_loader.DataLoader()
     dataset = DataLoader.load_data()
     GAN_Network = EnlightenGAN_Network.Network()
     # dataset_size = len(DataLoader)
     total_steps = 0
 
-    for epoch in range(1, opt.niter + opt.niter_decay + 1):
+    scratch_line = None
+    if mode == 1:
+        scratch_line = opt.which_epoch
+    elif mode == 0:
+        scratch_line = 0
+
+    for epoch in range(scratch_line + 1, opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
         for i, data in enumerate(dataset):
             # iter_start_time = time.time()
@@ -24,7 +30,6 @@ def train():
             GAN_Network.set_input(data)
             GAN_Network.optimize_parameters(epoch)
 
-            # todo : Push the results to the Website
             # if total_steps % opt.display_freq == 0:
             #     visualizer.display_current_results(GAN_Network.get_current_visuals(), epoch)
 
@@ -49,6 +54,19 @@ def train():
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
+        # ~~~ The next part is added by hand. In order to record the whole process. ~~~
+        print('The loss values are: ')
+        network_errors = GAN_Network.get_current_errors(epoch)
+        for loss in network_errors.keys():
+            print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
+        current_images = GAN_Network.get_current_visuals()
+        save_images_path = os.path.join(ROOT_PATH, 'Processing', str(epoch))
+        if not os.path.exists(save_images_path):
+            os.mkdir(save_images_path)
+        for image_key in current_images.keys():
+            save_image(current_images[image_key], save_images_path, epoch, image_key, isWeb=False)
+        # ~~~ The part I add is ended. ~~~
+
         if opt.new_lr:
             if epoch == opt.niter:
                 GAN_Network.update_learning_rate()
@@ -66,13 +84,13 @@ def train():
                 GAN_Network.update_learning_rate()
 
 
-def predict(image_list: list, user_ip: str, isWeb=False):
+def predict(image_path_list: list, user_ip: str, isWeb=False):
     imgs = []
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    for image_path in image_list:
+    for image_path in image_path_list:
         img = Image.open(image_path).convert('RGB')
         img = transform(img)
         img_input = torch.unsqueeze(img, 0)
@@ -98,20 +116,29 @@ def predict(image_list: list, user_ip: str, isWeb=False):
 
 if __name__ == '__main__':
     if opt.train:
-        # todo: post them to the website
-        train()
+        train(mode=0)
     elif opt.predict:
-        # todo: post them to the website
-        # if opt.use_models:
-        #     image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Results')
-        #     for iteration in range(5, 1000 + 5, 5):
-        #         opt.which_epoch = str(iteration)
-        #         if not os.path.exists(os.path.join(image_dir, '%s' % iteration)):
-        #             os.mkdir(os.path.join(image_dir, '%s' % iteration))
-        #         save_image_path = os.path.join(image_dir, '%s' % iteration)
-        #         file_name = str(iteration) + '.txt'
-        #         predict(image_dir=save_image_path, file_name=file_name)
-        #     predict(image_dir=os.path.join(image_dir, 'Latest'))
-        # else:
-        #     predict()
-        pass
+        image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Test_data')
+        image_path_list = []
+        for file_name in os.listdir(image_dir):
+            file_path = os.path.join(image_dir, file_name)
+            image_path_list.append(file_path)
+        if opt.use_models:
+            for iteration in range(5, 1000 + 5, 5):
+                opt.which_epoch = str(iteration)
+                save_image_path = os.path.join(image_dir, '%s' % iteration)
+                if not os.path.exists(save_image_path):
+                    os.mkdir(save_image_path)
+                predict(image_path_list=image_path_list, user_ip="", isWeb=False)
+        else:
+            predict(image_path_list=image_path_list, user_ip="", isWeb=False)
+    elif opt.continue_train:
+        print('Where do you want to start ?')
+        print('A. From epoch one.')
+        print('B. From last epoch.')
+
+        which_mode = input()
+        if which_mode.upper() == 'A':
+            train(mode=0)
+        elif which_mode.upper() == 'B':
+            train(mode=1)

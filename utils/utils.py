@@ -121,18 +121,16 @@ def latent2im(image_tensor, imtype=np.uint8):
     return image_numpy.astype(imtype)
 
 
-def save_image(image_numpy, image_dir, name, label):
+def save_image(image_numpy, image_dir, name, label, isWeb=True):
     image_name = '%s_%s.png' % (name, label)
-    image_2deploy_name = '%s_%s_2deploy.png' % (name, label)
-
     save_path = os.path.join(image_dir, image_name)
-    save_path_2deploy = os.path.join(image_dir, image_2deploy_name)
-
     image_pil = Image.fromarray(image_numpy)
-    image_pil_2deploy = image_pil.resize((750, 400), Image.BICUBIC)
-
     image_pil.save(save_path)
-    image_pil_2deploy.save(save_path_2deploy)
+    if isWeb:
+        image_2deploy_name = '%s_%s_2deploy.png' % (name, label)
+        save_path_2deploy = os.path.join(image_dir, image_2deploy_name)
+        image_pil_2deploy = image_pil.resize((750, 400), Image.BICUBIC)
+        image_pil_2deploy.save(save_path_2deploy)
 
 
 # Network Utils

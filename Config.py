@@ -9,7 +9,6 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
 
-# todo: make obj opt for more args
 parser = argparse.ArgumentParser(prefix_chars='-_')
 parser.add_argument("--train", action='store_true')
 parser.add_argument("--predict", action='store_true')
@@ -59,6 +58,7 @@ parser.add_argument('--vgg_choose', type=str, default='relu5_3', help='choose la
 parser.add_argument('--vgg_maxpooling', action='store_true', help='normalize attention map')
 parser.add_argument('--patch_vgg', action='store_true', help='use vgg loss between each patch')
 parser.add_argument('--new_lr', action='store_true', help='tanh')
+parser.add_argument('--self_attention', action='store_true', help='adding attention on the input of generator')
 
 # Train args
 

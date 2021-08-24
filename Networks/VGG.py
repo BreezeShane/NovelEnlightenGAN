@@ -10,7 +10,6 @@ def load_vgg16(opt, model_dir, gpu_ids):
         os.mkdir(model_dir)
     if not os.path.exists(model_dir + 'vgg16.weight'):
 
-        # todo: Output this error when build up the website &&&
         print(f"Error: vgg16.weight doesn't exist! Please download vgg16.weight and then put it in {ROOT_PATH}/Model/VGG/ !")
 
         return None

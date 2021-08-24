@@ -45,7 +45,8 @@ class Network:
         skip = True if opt.skip > 0 else False
         self.netG_A = define_G(opt, GPU_IDs, skip=skip)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
-        #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids, skip=False, opt=opt)
+        #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids,
+        #                                 skip=False, opt=opt)
 
         if self.opt.isTrain:
             self.netD_A = define_D(opt.output_nc, opt.ndf, opt.which_model_netD, opt,
@@ -55,6 +56,7 @@ class Network:
                                        opt.which_model_netD, opt,
                                        opt.n_layers_patchD, opt.norm, gpu_ids=GPU_IDs, patch=True)
         if not self.opt.isTrain or self.opt.continue_train:
+            # According to Discrete Math, this means train -> continue_train.
             which_epoch = opt.which_epoch
             self.load_network(self.netG_A, 'G_A', which_epoch)
             # self.load_network(self.netG_B, 'G_B', which_epoch)
