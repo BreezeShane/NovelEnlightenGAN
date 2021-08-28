@@ -5,12 +5,14 @@ from Networks.GAN_Definition import *
 
 
 class Network:
-    def __init__(self):
+    def __init__(self, is_on_colab=False):
         self.opt = opt
         self.gpu_ids = GPU_IDs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
-        self.save_dir = os.path.join(ROOT_PATH, 'Model/')
-
+        if is_on_colab:
+            self.save_dir = os.path.join('/content/drive/MyDrive/EnlightenGAN-Customed/', 'Model/')
+        else:
+            self.save_dir = os.path.join(ROOT_PATH, 'Model/')
         nb = opt.batchSize
         size = opt.fineSize
         # nc means the number of channels
@@ -402,14 +404,14 @@ class Network:
             self.optimizer_D_P.step()
 
     def get_current_errors(self, epoch):
-        D_A = self.loss_D_A.data[0]
-        D_P = self.loss_D_P.data[0] if self.opt.patchD else 0
-        G_A = self.loss_G_A.data[0]
+        D_A = self.loss_D_A.data
+        D_P = self.loss_D_P.data if self.opt.patchD else 0
+        G_A = self.loss_G_A.data
         if self.opt.vgg > 0:
-            vgg = self.loss_vgg_b.data[0] / self.opt.vgg if self.opt.vgg > 0 else 0
+            vgg = self.loss_vgg_b.data / self.opt.vgg if self.opt.vgg > 0 else 0
             return OrderedDict([('D_A', D_A), ('G_A', G_A), ("vgg", vgg), ("D_P", D_P)])
         elif self.opt.fcn > 0:
-            fcn = self.loss_fcn_b.data[0] / self.opt.fcn if self.opt.fcn > 0 else 0
+            fcn = self.loss_fcn_b.data / self.opt.fcn if self.opt.fcn > 0 else 0
             return OrderedDict([('D_A', D_A), ('G_A', G_A), ("fcn", fcn), ("D_P", D_P)])
 
     def get_current_visuals(self):

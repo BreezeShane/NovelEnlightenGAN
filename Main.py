@@ -8,7 +8,7 @@ from utils.utils import save_image
 from utils import data_loader
 
 
-def train(mode):
+def train(mode: int, is_on_colab: bool=False):
     DataLoader = data_loader.DataLoader()
     dataset = DataLoader.load_data()
     GAN_Network = EnlightenGAN_Network.Network()
@@ -45,7 +45,7 @@ def train(mode):
                       (epoch, total_steps))
                 GAN_Network.save('latest')
 
-        if epoch % opt.save_epoch_freq == 0:
+        if epoch % opt.save_epoch_freq == 0 and epoch >= 100:
             print('saving the GAN_Network at the end of epoch %d, iters %d' %
                   (epoch, total_steps))
             GAN_Network.save('latest')
@@ -59,12 +59,15 @@ def train(mode):
         network_errors = GAN_Network.get_current_errors(epoch)
         for loss in network_errors.keys():
             print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
-        current_images = GAN_Network.get_current_visuals()
-        save_images_path = os.path.join(ROOT_PATH, 'Processing', str(epoch))
-        if not os.path.exists(save_images_path):
-            os.mkdir(save_images_path)
-        for image_key in current_images.keys():
-            save_image(current_images[image_key], save_images_path, epoch, image_key, isWeb=False)
+        if epoch >= 100:
+            current_images = GAN_Network.get_current_visuals()
+            save_images_path = os.path.join(
+                ROOT_PATH if not is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/',
+                'Processing', str(epoch))
+            if not os.path.exists(save_images_path):
+                os.mkdir(save_images_path)
+            for image_key in current_images.keys():
+                save_image(current_images[image_key], save_images_path, epoch, image_key, isWeb=False)
         # ~~~ The part I add is ended. ~~~
 
         if opt.new_lr:
@@ -116,7 +119,7 @@ def predict(image_path_list: list, user_ip: str, isWeb=False):
 
 if __name__ == '__main__':
     if opt.train:
-        train(mode=0)
+        train(mode=0, is_on_colab=True)
     elif opt.predict:
         image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Test_data')
         image_path_list = []
@@ -124,7 +127,7 @@ if __name__ == '__main__':
             file_path = os.path.join(image_dir, file_name)
             image_path_list.append(file_path)
         if opt.use_models:
-            for iteration in range(5, 1000 + 5, 5):
+            for iteration in range(100, 500 + 5, 5):
                 opt.which_epoch = str(iteration)
                 save_image_path = os.path.join(image_dir, '%s' % iteration)
                 if not os.path.exists(save_image_path):
@@ -139,6 +142,6 @@ if __name__ == '__main__':
 
         which_mode = input()
         if which_mode.upper() == 'A':
-            train(mode=0)
+            train(mode=0, is_on_colab=True)
         elif which_mode.upper() == 'B':
-            train(mode=1)
+            train(mode=1, is_on_colab=True)
