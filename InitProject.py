@@ -1,4 +1,4 @@
-from Config import *
+from Config import ROOT_PATH, opt
 from os import mkdir
 from os.path import join, exists
 
