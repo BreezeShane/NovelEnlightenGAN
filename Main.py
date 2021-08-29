@@ -55,17 +55,18 @@ def train(mode: int):
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
-        writers = [
-            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_A'), comment='Global Discriminator'),
-            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'G_A'), comment='Global Generator'),
-            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'VGG'), comment='Perceptual Extractor'),
-            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_P'), comment='Local Discriminator')
-        ]
+        # writers = [
+        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_A'), comment='Global Discriminator'),
+        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'G_A'), comment='Global Generator'),
+        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'VGG'), comment='Perceptual Extractor'),
+        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_P'), comment='Local Discriminator')
+        # ]
+        Writer = SummaryWriter(log_dir=os.path.join(save_root_path, 'log'), comment='Loss Group')
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
-        for writer, loss_name in zip(writers, network_errors.keys()):
-            with writer as wrt:
-                wrt.add_scalar(loss_name, network_errors[loss_name], epoch)
+        for scalar in network_errors.items():
+            with Writer as wrt:
+                wrt.add_scalars(scalar[0], dict(scalar), epoch)
             # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
         if epoch >= 100:
             current_images = GAN_Network.get_current_visuals()
