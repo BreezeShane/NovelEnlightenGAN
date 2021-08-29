@@ -13,6 +13,9 @@ folder_paths = [
     join(root_path, 'log', 'G_A'),
     join(root_path, 'log', 'VGG'),
     join(root_path, 'log', 'D_P'),
+    join(root_path, 'log', 'Discriminator_Global_Struct'),
+    join(root_path, 'log', 'Discriminator_Local_Struct'),
+    join(root_path, 'log', 'Generator_Struct'),
     join(root_path, 'Processing'),
 ]
 
