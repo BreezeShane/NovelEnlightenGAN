@@ -56,10 +56,10 @@ def train(mode: int):
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
         writers = [
-            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'D_A')),
-            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'G_A')),
-            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'VGG')),
-            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'D_P'))
+            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'D_A'), comment='Global Discriminator'),
+            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'G_A'), comment='Global Generator'),
+            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'VGG'), comment='Perceptual Extractor'),
+            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'D_P'), comment='Local Discriminator')
         ]
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)

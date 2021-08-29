@@ -112,8 +112,6 @@ folder_paths = [
     os.path.join(root_path, 'Processing'),
 ]
 
-
-def initialize():
-    for path in folder_paths:
-        if not os.path.exists(path):
-            os.mkdir(path)
+for path in folder_paths:
+    if not os.path.exists(path):
+        os.mkdir(path)
