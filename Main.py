@@ -64,7 +64,8 @@ def train(mode: int):
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
         for writer, loss_name in zip(writers, network_errors.keys()):
-            writer.add_scalar(loss_name, network_errors[loss_name], epoch)
+            with writer as wrt:
+                wrt.add_scalar(loss_name, network_errors[loss_name], epoch)
             # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
         if epoch >= 100:
             current_images = GAN_Network.get_current_visuals()
