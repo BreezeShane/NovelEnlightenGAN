@@ -66,11 +66,8 @@ def train(mode: int):
         for writer, loss_name in zip(writers, network_errors.keys()):
             writer.add_scalar(loss_name, network_errors[loss_name], epoch)
             # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
-        current_images = GAN_Network.get_current_visuals()
-        image_printer = SummaryWriter(os.path.join(ROOT_PATH, 'log', 'Images'))
-        for image_key in current_images.keys():
-            image_printer.add_image(image_key, current_images[image_key], epoch)
         if epoch >= 100:
+            current_images = GAN_Network.get_current_visuals()
             save_images_path = os.path.join(
                 ROOT_PATH if not opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/',
                 'Processing', str(epoch))

@@ -1,10 +1,9 @@
+import os
 import torch
 import argparse
-from os import mkdir, getcwd
-from os.path import join, exists
 
 
-ROOT_PATH = getcwd()
+ROOT_PATH = os.getcwd()
 GPU_IDs = [id for id in range(torch.cuda.device_count())]
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -102,19 +101,19 @@ else:
     root_path = ROOT_PATH
 
 folder_paths = [
-    join(root_path, 'log'),
-    join(root_path, 'log', 'D_A'),
-    join(root_path, 'log', 'G_A'),
-    join(root_path, 'log', 'VGG'),
-    join(root_path, 'log', 'D_P'),
-    join(root_path, 'log', 'Discriminator_Global_Struct'),
-    join(root_path, 'log', 'Discriminator_Local_Struct'),
-    join(root_path, 'log', 'Generator_Struct'),
-    join(root_path, 'Processing'),
+    os.path.join(root_path, 'log'),
+    os.path.join(root_path, 'log', 'D_A'),
+    os.path.join(root_path, 'log', 'G_A'),
+    os.path.join(root_path, 'log', 'VGG'),
+    os.path.join(root_path, 'log', 'D_P'),
+    os.path.join(root_path, 'log', 'Discriminator_Global_Struct'),
+    os.path.join(root_path, 'log', 'Discriminator_Local_Struct'),
+    os.path.join(root_path, 'log', 'Generator_Struct'),
+    os.path.join(root_path, 'Processing'),
 ]
 
 
 def initialize():
     for path in folder_paths:
-        if not exists(path):
-            mkdir(path)
+        if not os.path.exists(path):
+            os.mkdir(path)

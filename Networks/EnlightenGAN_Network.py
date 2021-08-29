@@ -2,7 +2,6 @@ from collections import OrderedDict
 import Networks.VGG as VGG
 import Networks.FCN as FCN
 from Networks.GAN_Definition import *
-from torch.utils.tensorboard import SummaryWriter
 
 
 class Network:
@@ -195,17 +194,11 @@ class Network:
         fake_B = self.fake_B_pool.query(self.fake_B)
         fake_B = self.fake_B
         self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B, True)
-        with SummaryWriter(log_dir=os.path.join(ROOT_PATH if not self.opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/', 'log', 'Discriminator_Global_Struct'), comment='EnlightenGAN_Discriminator_Global') as net:
-            net.add_graph(self.netD_A, self.real_B)
-            net.flush()
         self.loss_D_A.backward()
 
     def backward_D_P(self):
         if self.opt.hybrid_loss:
             loss_D_P = self.backward_D_basic(self.netD_P, self.real_patch, self.fake_patch, False)
-            with SummaryWriter(log_dir=os.path.join(ROOT_PATH if not self.opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/', 'log', 'Discriminator_Local_Struct'), comment='EnlightenGAN_Discriminator_Local') as net:
-                net.add_graph(self.netD_P, self.real_patch)
-                net.flush()
             if self.opt.patchD_3 > 0:
                 for i in range(self.opt.patchD_3):
                     loss_D_P += self.backward_D_basic(self.netD_P, self.real_patch_1[i], self.fake_patch_1[i], False)
@@ -241,9 +234,6 @@ class Network:
             self.fake_B, self.latent_real_A = self.netG_A.forward(self.real_img, self.real_A_gray)
         else:
             self.fake_B = self.netG_A.forward(self.real_img, self.real_A_gray)
-            with SummaryWriter(log_dir=os.path.join(ROOT_PATH if not self.opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/', 'log', 'Generator_Struct'), comment='EnlightenGAN_Generator') as net:
-                net.add_graph(self.netG_A, [self.real_img, self.real_A_gray])
-                net.flush()
         if self.opt.patchD:
             w = self.real_A.size(3)
             h = self.real_A.size(2)

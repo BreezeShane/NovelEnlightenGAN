@@ -18,7 +18,6 @@ def load_vgg16(opt, model_dir, gpu_ids):
     if opt.use_gpu:
         vgg.cuda(device=gpu_ids[opt.gpu_id])
     vgg.load_state_dict(torch.load(os.path.join(model_dir, 'vgg16.weight')))
-    vgg = torch.nn.DataParallel(vgg, gpu_ids)
     return vgg
 
 
