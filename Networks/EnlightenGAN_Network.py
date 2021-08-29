@@ -2,14 +2,15 @@ from collections import OrderedDict
 import Networks.VGG as VGG
 import Networks.FCN as FCN
 from Networks.GAN_Definition import *
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Network:
-    def __init__(self, is_on_colab=False):
+    def __init__(self):
         self.opt = opt
         self.gpu_ids = GPU_IDs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
-        if is_on_colab:
+        if self.opt.is_on_colab:
             self.save_dir = os.path.join('/content/drive/MyDrive/EnlightenGAN-Customed/', 'Model/')
         else:
             self.save_dir = os.path.join(ROOT_PATH, 'Model/')
@@ -194,11 +195,15 @@ class Network:
         fake_B = self.fake_B_pool.query(self.fake_B)
         fake_B = self.fake_B
         self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B, True)
+        with SummaryWriter(comment='EnlightenGAN_Discriminator_Global') as net:
+            net.add_graph(self.netD_A, self.real_B)
         self.loss_D_A.backward()
 
     def backward_D_P(self):
         if self.opt.hybrid_loss:
             loss_D_P = self.backward_D_basic(self.netD_P, self.real_patch, self.fake_patch, False)
+            with SummaryWriter(comment='EnlightenGAN_Discriminator_Local') as net:
+                net.add_graph(self.netD_P, self.real_patch)
             if self.opt.patchD_3 > 0:
                 for i in range(self.opt.patchD_3):
                     loss_D_P += self.backward_D_basic(self.netD_P, self.real_patch_1[i], self.fake_patch_1[i], False)
@@ -234,6 +239,8 @@ class Network:
             self.fake_B, self.latent_real_A = self.netG_A.forward(self.real_img, self.real_A_gray)
         else:
             self.fake_B = self.netG_A.forward(self.real_img, self.real_A_gray)
+            with SummaryWriter(comment='EnlightenGAN_Generator') as net:
+                net.add_graph(self.netG_A, [self.real_img, self.real_A_gray])
         if self.opt.patchD:
             w = self.real_A.size(3)
             h = self.real_A.size(2)

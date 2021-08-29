@@ -1,14 +1,14 @@
 import time
 import ntpath
-from PIL import Image
 from Config import *
+from PIL import Image
 from torchvision import transforms
+from utils import data_loader, utils
 from Networks import EnlightenGAN_Network
-from utils.utils import save_image
-from utils import data_loader
+from torch.utils.tensorboard import SummaryWriter
 
 
-def train(mode: int, is_on_colab: bool=False):
+def train(mode: int):
     DataLoader = data_loader.DataLoader()
     dataset = DataLoader.load_data()
     GAN_Network = EnlightenGAN_Network.Network()
@@ -55,19 +55,29 @@ def train(mode: int, is_on_colab: bool=False):
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
-        print('The loss values are: ')
+        writers = [
+            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'D_A')),
+            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'G_A')),
+            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'VGG')),
+            SummaryWriter(os.path.join(ROOT_PATH, 'log', 'D_P'))
+        ]
+        # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
-        for loss in network_errors.keys():
-            print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
+        for writer, loss_name in zip(writers, network_errors.keys()):
+            writer.add_scalar(loss_name, network_errors[loss_name], epoch)
+            # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
+        current_images = GAN_Network.get_current_visuals()
+        image_printer = SummaryWriter(os.path.join(ROOT_PATH, 'log', 'Images'))
+        for image_key in current_images.keys():
+            image_printer.add_image(image_key, current_images[image_key], epoch)
         if epoch >= 100:
-            current_images = GAN_Network.get_current_visuals()
             save_images_path = os.path.join(
-                ROOT_PATH if not is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/',
+                ROOT_PATH if not opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/',
                 'Processing', str(epoch))
             if not os.path.exists(save_images_path):
                 os.mkdir(save_images_path)
             for image_key in current_images.keys():
-                save_image(current_images[image_key], save_images_path, epoch, image_key, isWeb=False)
+                utils.save_image(current_images[image_key], save_images_path, epoch, image_key, isWeb=False)
         # ~~~ The part I add is ended. ~~~
 
         if opt.new_lr:
@@ -114,12 +124,12 @@ def predict(image_path_list: list, user_ip: str, isWeb=False):
         else:
             image_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
         for label, image_numpy in visuals.items():
-            save_image(image_numpy, image_dir, name, label)
+            utils.save_image(image_numpy, image_dir, name, label)
 
 
 if __name__ == '__main__':
     if opt.train:
-        train(mode=0, is_on_colab=True)
+        train(mode=0)
     elif opt.predict:
         image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Test_data')
         image_path_list = []
@@ -142,6 +152,6 @@ if __name__ == '__main__':
 
         which_mode = input()
         if which_mode.upper() == 'A':
-            train(mode=0, is_on_colab=True)
+            train(mode=0)
         elif which_mode.upper() == 'B':
-            train(mode=1, is_on_colab=True)
+            train(mode=1)

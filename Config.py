@@ -1,6 +1,7 @@
 import os
 import torch
 import argparse
+import InitProject
 
 ROOT_PATH = os.getcwd()
 GPU_IDs = [id for id in range(torch.cuda.device_count())]
@@ -13,6 +14,7 @@ parser = argparse.ArgumentParser(prefix_chars='-_')
 parser.add_argument("--train", action='store_true')
 parser.add_argument("--predict", action='store_true')
 parser.add_argument("--isWeb", action='store_true')
+parser.add_argument("--is_on_colab", action='store_true')
 
 # parser.add_argument("--use_gpu", type=bool, default=True if torch.cuda.is_available() else False)
 parser.add_argument("--use_gpu", type=bool, default=True)
@@ -91,3 +93,5 @@ parser.add_argument("--testMetrics", action='store_true')
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
 torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
+
+InitProject.initialize()
