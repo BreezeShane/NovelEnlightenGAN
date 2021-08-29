@@ -9,10 +9,7 @@ class Network:
         self.opt = opt
         self.gpu_ids = GPU_IDs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
-        if self.opt.is_on_colab:
-            self.save_dir = os.path.join('/content/drive/MyDrive/EnlightenGAN-Customed/', 'Model/')
-        else:
-            self.save_dir = os.path.join(ROOT_PATH, 'Model/')
+        self.save_dir = os.path.join(save_root_path, 'Model/')
         nb = opt.batchSize
         size = opt.fineSize
         # nc means the number of channels

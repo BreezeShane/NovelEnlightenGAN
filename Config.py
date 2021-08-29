@@ -96,20 +96,20 @@ torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
 
 
 if opt.is_on_colab:
-    root_path = '/content/drive/MyDrive/EnlightenGAN-Customed/'
+    save_root_path = '/content/drive/MyDrive/EnlightenGAN-Customed/'
 else:
-    root_path = ROOT_PATH
+    save_root_path = ROOT_PATH
 
 folder_paths = [
-    os.path.join(root_path, 'log'),
-    os.path.join(root_path, 'log', 'D_A'),
-    os.path.join(root_path, 'log', 'G_A'),
-    os.path.join(root_path, 'log', 'VGG'),
-    os.path.join(root_path, 'log', 'D_P'),
-    os.path.join(root_path, 'log', 'Discriminator_Global_Struct'),
-    os.path.join(root_path, 'log', 'Discriminator_Local_Struct'),
-    os.path.join(root_path, 'log', 'Generator_Struct'),
-    os.path.join(root_path, 'Processing'),
+    os.path.join(save_root_path, 'log'),
+    os.path.join(save_root_path, 'log', 'D_A'),
+    os.path.join(save_root_path, 'log', 'G_A'),
+    os.path.join(save_root_path, 'log', 'VGG'),
+    os.path.join(save_root_path, 'log', 'D_P'),
+    os.path.join(save_root_path, 'log', 'Discriminator_Global_Struct'),
+    os.path.join(save_root_path, 'log', 'Discriminator_Local_Struct'),
+    os.path.join(save_root_path, 'log', 'Generator_Struct'),
+    os.path.join(save_root_path, 'Processing'),
 ]
 
 for path in folder_paths:

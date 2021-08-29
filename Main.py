@@ -56,10 +56,10 @@ def train(mode: int):
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
         writers = [
-            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'D_A'), comment='Global Discriminator'),
-            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'G_A'), comment='Global Generator'),
-            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'VGG'), comment='Perceptual Extractor'),
-            SummaryWriter(log_dir=os.path.join(ROOT_PATH, 'log', 'D_P'), comment='Local Discriminator')
+            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_A'), comment='Global Discriminator'),
+            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'G_A'), comment='Global Generator'),
+            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'VGG'), comment='Perceptual Extractor'),
+            SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_P'), comment='Local Discriminator')
         ]
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
@@ -69,9 +69,7 @@ def train(mode: int):
             # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
         if epoch >= 100:
             current_images = GAN_Network.get_current_visuals()
-            save_images_path = os.path.join(
-                ROOT_PATH if not opt.is_on_colab else '/content/drive/MyDrive/EnlightenGAN-Customed/',
-                'Processing', str(epoch))
+            save_images_path = os.path.join(save_root_path, 'Processing', str(epoch))
             if not os.path.exists(save_images_path):
                 os.mkdir(save_images_path)
             for image_key in current_images.keys():
