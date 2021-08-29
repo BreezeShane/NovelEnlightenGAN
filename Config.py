@@ -1,9 +1,10 @@
-import os
 import torch
 import argparse
-import InitProject
+from os import mkdir, getcwd
+from os.path import join, exists
 
-ROOT_PATH = os.getcwd()
+
+ROOT_PATH = getcwd()
 GPU_IDs = [id for id in range(torch.cuda.device_count())]
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
@@ -94,4 +95,26 @@ opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
 torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
 
-InitProject.initialize()
+
+if opt.is_on_colab:
+    root_path = '/content/drive/MyDrive/EnlightenGAN-Customed/'
+else:
+    root_path = ROOT_PATH
+
+folder_paths = [
+    join(root_path, 'log'),
+    join(root_path, 'log', 'D_A'),
+    join(root_path, 'log', 'G_A'),
+    join(root_path, 'log', 'VGG'),
+    join(root_path, 'log', 'D_P'),
+    join(root_path, 'log', 'Discriminator_Global_Struct'),
+    join(root_path, 'log', 'Discriminator_Local_Struct'),
+    join(root_path, 'log', 'Generator_Struct'),
+    join(root_path, 'Processing'),
+]
+
+
+def initialize():
+    for path in folder_paths:
+        if not exists(path):
+            mkdir(path)
