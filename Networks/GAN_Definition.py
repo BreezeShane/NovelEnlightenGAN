@@ -16,7 +16,8 @@ def define_G(opt, gpu_ids=[], skip=False):
     netG = Unet_resize_conv(opt, skip)
 
     if len(gpu_ids) > 0 and opt.use_gpu:
-        netG.cuda(device=gpu_ids[opt.gpu_id])
+        netG.cuda()
+        netG = torch.nn.DataParallel(netG, gpu_ids)
     netG.apply(weights_init)
     return netG
 
@@ -34,7 +35,8 @@ def define_D(input_nc, ndf, which_model_netD, opt,
     elif which_model_netD == 'no_norm':
         netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid, gpu_ids=gpu_ids)
     if opt.use_gpu:
-        netD.cuda(device=gpu_ids[opt.gpu_id])
+        netD.cuda()
+        netD = torch.nn.DataParallel(netD, gpu_ids)
     netD.apply(weights_init)
     return netD
 

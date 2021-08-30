@@ -7,7 +7,7 @@ from Networks.GAN_Definition import *
 class Network:
     def __init__(self):
         self.opt = opt
-        self.gpu_ids = GPU_IDs
+        self.gpu_ids = Use_GPUs
         self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
         self.save_dir = os.path.join(save_root_path, 'Model/')
         nb = opt.batchSize
@@ -26,14 +26,14 @@ class Network:
                     self.vgg_patch_loss.cuda()
             if opt.use_gpu:
                 self.vgg_loss.cuda()
-            self.vgg = VGG.load_vgg16(opt, os.path.join(ROOT_PATH, "Model/VGG/"), GPU_IDs)
+            self.vgg = VGG.load_vgg16(opt, os.path.join(ROOT_PATH, "Model/VGG/"), Use_GPUs)
             self.vgg.eval()
             for param in self.vgg.parameters():
                 param.requires_grad = False
         elif opt.fcn > 0:
             self.fcn_loss = FCN.SemanticLoss(opt)
             self.fcn_loss.cuda()
-            self.fcn = FCN.load_fcn(opt, os.path.join(ROOT_PATH, "Model/FCN/"), GPU_IDs)
+            self.fcn = FCN.load_fcn(opt, os.path.join(ROOT_PATH, "Model/FCN/"), Use_GPUs)
             self.fcn.eval()
             for param in self.fcn.parameters():
                 param.requires_grad = False
@@ -42,18 +42,18 @@ class Network:
         # Code (paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
 
         skip = True if opt.skip > 0 else False
-        self.netG_A = define_G(opt, GPU_IDs, skip=skip)
+        self.netG_A = define_G(opt, Use_GPUs, skip=skip)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
         #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids,
         #                                 skip=False, opt=opt)
 
         if self.opt.isTrain:
             self.netD_A = define_D(opt.output_nc, opt.ndf, opt.which_model_netD, opt,
-                                   opt.n_layers_D, opt.norm, gpu_ids=GPU_IDs, patch=False)
+                                   opt.n_layers_D, opt.norm, gpu_ids=Use_GPUs, patch=False)
             if self.opt.patchD:
                 self.netD_P = define_D(opt.input_nc, opt.ndf,
                                        opt.which_model_netD, opt,
-                                       opt.n_layers_patchD, opt.norm, gpu_ids=GPU_IDs, patch=True)
+                                       opt.n_layers_patchD, opt.norm, gpu_ids=Use_GPUs, patch=True)
         if not self.opt.isTrain or self.opt.continue_train:
             # According to Discrete Math, this means train -> continue_train.
             which_epoch = opt.which_epoch
@@ -495,9 +495,12 @@ class Network:
         save_path = os.path.join(self.save_dir, save_filename)
         torch.save(network.cpu().state_dict(), save_path)
         if len(gpu_ids) and torch.cuda.is_available():
-            network.cuda(device=gpu_ids[0])
+            network.cuda()
 
     def load_network(self, network, network_label, epoch_label):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
-        network.load_state_dict(torch.load(save_path))
+        if opt.use_gpu:
+            network.load_state_dict(torch.load(save_path, map_location='cuda:' + str(opt.gpu_id[0])))
+        else:
+            network.load_state_dict(torch.load(save_path, map_location='cpu'))

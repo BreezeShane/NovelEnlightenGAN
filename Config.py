@@ -18,7 +18,7 @@ parser.add_argument("--is_on_colab", action='store_true')
 
 # parser.add_argument("--use_gpu", type=bool, default=True if torch.cuda.is_available() else False)
 parser.add_argument("--use_gpu", type=bool, default=True)
-parser.add_argument("--gpu_id", type=int, default=0)
+parser.add_argument("--gpu_id", type=int, nargs='+')
 parser.add_argument("--batchSize", type=int, default=8)
 parser.add_argument('--which_direction', type=str, default='AtoB', help='AtoB or BtoA')
 parser.add_argument("--fineSize", type=int, default=256)
@@ -92,8 +92,11 @@ parser.add_argument("--testMetrics", action='store_true')
 
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
-torch.cuda.set_device(device=GPU_IDs[opt.gpu_id])
 
+
+Use_GPUs = list(set(opt.gpu_id).intersection(set(GPU_IDs)))
+print('Load on GPU: ', ', '.join(map(str, Use_GPUs)))
+os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, Use_GPUs))
 
 if opt.is_on_colab:
     save_root_path = '/content/drive/MyDrive/EnlightenGAN-Customed/'
