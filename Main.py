@@ -55,18 +55,11 @@ def train(mode: int):
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
-        # writers = [
-        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_A'), comment='Global Discriminator'),
-        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'G_A'), comment='Global Generator'),
-        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'VGG'), comment='Perceptual Extractor'),
-        #     SummaryWriter(log_dir=os.path.join(save_root_path, 'log', 'D_P'), comment='Local Discriminator')
-        # ]
         Writer = SummaryWriter(log_dir=os.path.join(save_root_path, 'log'), comment='Loss Group')
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
         with Writer as wrt:
             wrt.add_scalars('Loss Group', dict(network_errors), epoch)
-            # print(loss, ' Loss at epoch ', epoch, ' is ', network_errors[loss])
         if epoch >= 100:
             current_images = GAN_Network.get_current_visuals()
             save_images_path = os.path.join(save_root_path, 'Processing', str(epoch))

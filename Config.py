@@ -102,13 +102,6 @@ else:
 
 folder_paths = [
     os.path.join(save_root_path, 'log'),
-    os.path.join(save_root_path, 'log', 'D_A'),
-    os.path.join(save_root_path, 'log', 'G_A'),
-    os.path.join(save_root_path, 'log', 'VGG'),
-    os.path.join(save_root_path, 'log', 'D_P'),
-    os.path.join(save_root_path, 'log', 'Discriminator_Global_Struct'),
-    os.path.join(save_root_path, 'log', 'Discriminator_Local_Struct'),
-    os.path.join(save_root_path, 'log', 'Generator_Struct'),
     os.path.join(save_root_path, 'Processing'),
 ]
 
