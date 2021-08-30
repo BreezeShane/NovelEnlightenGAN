@@ -17,7 +17,7 @@ def train(mode: int):
 
     scratch_line = None
     if mode == 1:
-        scratch_line = opt.which_epoch
+        scratch_line = int(opt.which_epoch)
     elif mode == 0:
         scratch_line = 0
 
