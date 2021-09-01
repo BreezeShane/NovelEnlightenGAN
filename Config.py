@@ -18,7 +18,7 @@ parser.add_argument("--is_on_colab", action='store_true', help='Set the status i
 
 # parser.add_argument("--use_gpu", type=bool, default=True if torch.cuda.is_available() else False)
 parser.add_argument("--use_gpu", type=bool, default=True, help='Set whether you would like to use gpu or not.')
-parser.add_argument("--gpu_id", type=int, nargs='+', help='Set up on which gpus you want to run. Use card ids parted by whitespace.')
+parser.add_argument("--gpu_id", type=int, default=0, help='Set up on which gpu you want to run.')
 parser.add_argument("--batchSize", type=int, default=8, help='input batch size')
 parser.add_argument('--which_direction', type=str, default='AtoB', help='AtoB or BtoA')
 parser.add_argument("--fineSize", type=int, default=256, help='then crop to this size')
@@ -93,19 +93,20 @@ parser.add_argument("--testMetrics", action='store_true', help='To use Metrics t
 opt = parser.parse_args()
 opt.isTrain = opt.train or opt.continue_train
 
-
-Use_GPUs = list(set(opt.gpu_id).intersection(set(GPU_IDs)))
-print('Load on GPU: ', ', '.join(map(str, Use_GPUs)))
-os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(map(str, Use_GPUs))
+if opt.gpu_id not in GPU_IDs:
+    print(f"GPU {opt.gpu_id} is invalid! ")
+    exit()
+else:
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(opt.gpu_id)
 
 if opt.is_on_colab:
-    save_root_path = '/content/drive/MyDrive/EnlightenGAN-Customed/'
+    SAVE_ROOT_PATH = '/content/drive/MyDrive/EnlightenGAN-Customed/'
 else:
-    save_root_path = ROOT_PATH
+    SAVE_ROOT_PATH = ROOT_PATH
 
 folder_paths = [
-    os.path.join(save_root_path, 'log'),
-    os.path.join(save_root_path, 'Processing'),
+    os.path.join(SAVE_ROOT_PATH, 'log'),
+    os.path.join(SAVE_ROOT_PATH, 'Processing'),
 ]
 
 for path in folder_paths:

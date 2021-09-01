@@ -45,24 +45,25 @@ def train(mode: int):
                       (epoch, total_steps))
                 GAN_Network.save('latest')
 
-        if epoch % opt.save_epoch_freq == 0 and epoch >= 100:
+        if epoch % opt.save_epoch_freq == 0:
             print('saving the GAN_Network at the end of epoch %d, iters %d' %
                   (epoch, total_steps))
             GAN_Network.save('latest')
-            GAN_Network.save(epoch)
+            if epoch >= 100:
+                GAN_Network.save(epoch)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
         # ~~~ The next part is added by hand. In order to record the whole process. ~~~
-        Writer = SummaryWriter(log_dir=os.path.join(save_root_path, 'log'), comment='Loss Group')
+        Writer = SummaryWriter(log_dir=os.path.join(SAVE_ROOT_PATH, 'log'), comment='Loss Group')
         # print('The loss values are: ')
         network_errors = GAN_Network.get_current_errors(epoch)
         with Writer as wrt:
             wrt.add_scalars('Loss Group', dict(network_errors), epoch)
         if epoch >= 100:
             current_images = GAN_Network.get_current_visuals()
-            save_images_path = os.path.join(save_root_path, 'Processing', str(epoch))
+            save_images_path = os.path.join(SAVE_ROOT_PATH, 'Processing', str(epoch))
             if not os.path.exists(save_images_path):
                 os.mkdir(save_images_path)
             for image_key in current_images.keys():

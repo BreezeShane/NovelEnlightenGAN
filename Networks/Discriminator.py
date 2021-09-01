@@ -3,9 +3,8 @@ import torch.nn as nn
 
 # Defines the PatchGAN discriminator with the specified arguments.
 class NLayerDiscriminator(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, use_sigmoid=False, gpu_ids=[]):
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, use_sigmoid=False):
         super(NLayerDiscriminator, self).__init__()
-        self.gpu_ids = gpu_ids
 
         kw = 4
         padw = int(np.ceil((kw - 1) / 2))
@@ -50,9 +49,8 @@ class NLayerDiscriminator(nn.Module):
 
 
 class NoNormDiscriminator(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3, use_sigmoid=False, gpu_ids=[]):
+    def __init__(self, input_nc, ndf=64, n_layers=3, use_sigmoid=False):
         super(NoNormDiscriminator, self).__init__()
-        self.gpu_ids = gpu_ids
 
         kw = 4
         padw = int(np.ceil((kw - 1) / 2))

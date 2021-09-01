@@ -127,7 +127,7 @@ class FCN32s(nn.Module):
         return h
 
 
-def load_fcn(opt, model_dir, gpu_ids):
+def load_fcn(opt, model_dir):
     fcn = FCN32s()
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -135,8 +135,8 @@ def load_fcn(opt, model_dir, gpu_ids):
         print(f"Error: fcn32s_from_caffe.pth doesn't exist! Please download fcn32s_from_caffe.pth and then put it in {ROOT_PATH}/Model/FCN/ !")
         return None
     if opt.use_gpu:
-        fcn.cuda()
-        fcn.load_state_dict(torch.load(os.path.join(model_dir, 'fcn32s_from_caffe.pth'), map_location='cuda:' + str(opt.gpu_id[0])))
+        fcn.cuda(device=opt.gpu_id)
+        fcn.load_state_dict(torch.load(os.path.join(model_dir, 'fcn32s_from_caffe.pth'), map_location='cuda:' + str(opt.gpu_id)))
     else:
         fcn.load_state_dict(torch.load(os.path.join(model_dir, 'fcn32s_from_caffe.pth'), map_location='cpu'))
     return fcn

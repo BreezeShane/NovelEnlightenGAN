@@ -7,33 +7,32 @@ from Networks.GAN_Definition import *
 class Network:
     def __init__(self):
         self.opt = opt
-        self.gpu_ids = Use_GPUs
-        self.Tensor = torch.cuda.FloatTensor if self.opt.use_gpu else torch.Tensor
-        self.save_dir = os.path.join(save_root_path, 'Model/')
+        self.Tensor = torch.FloatTensor
+        self.save_dir = os.path.join(SAVE_ROOT_PATH, 'Model/')
         nb = opt.batchSize
         size = opt.fineSize
         # nc means the number of channels
-        self.input_A = self.Tensor(nb, opt.input_nc, size, size)
-        self.input_B = self.Tensor(nb, opt.output_nc, size, size)
-        self.input_img = self.Tensor(nb, opt.input_nc, size, size)
-        self.input_A_gray = self.Tensor(nb, 1, size, size)
+        self.input_A = self.Tensor(nb, opt.input_nc, size, size).cuda(device=self.opt.gpu_id)
+        self.input_B = self.Tensor(nb, opt.output_nc, size, size).cuda(device=self.opt.gpu_id)
+        self.input_img = self.Tensor(nb, opt.input_nc, size, size).cuda(device=self.opt.gpu_id)
+        self.input_A_gray = self.Tensor(nb, 1, size, size).cuda(device=self.opt.gpu_id)
 
         if opt.vgg > 0:
             self.vgg_loss = VGG.PerceptualLoss(opt)
             if self.opt.IN_vgg:
                 self.vgg_patch_loss = VGG.PerceptualLoss(opt)
                 if opt.use_gpu:
-                    self.vgg_patch_loss.cuda()
+                    self.vgg_patch_loss.cuda(device=opt.gpu_id)
             if opt.use_gpu:
-                self.vgg_loss.cuda()
-            self.vgg = VGG.load_vgg16(opt, os.path.join(ROOT_PATH, "Model/VGG/"), Use_GPUs)
+                self.vgg_loss.cuda(device=opt.gpu_id)
+            self.vgg = VGG.load_vgg16(opt, os.path.join(ROOT_PATH, "Model/VGG/"))
             self.vgg.eval()
             for param in self.vgg.parameters():
                 param.requires_grad = False
         elif opt.fcn > 0:
             self.fcn_loss = FCN.SemanticLoss(opt)
-            self.fcn_loss.cuda()
-            self.fcn = FCN.load_fcn(opt, os.path.join(ROOT_PATH, "Model/FCN/"), Use_GPUs)
+            self.fcn_loss.cuda(device=opt.gpu_id)
+            self.fcn = FCN.load_fcn(opt, os.path.join(ROOT_PATH, "Model/FCN/"))
             self.fcn.eval()
             for param in self.fcn.parameters():
                 param.requires_grad = False
@@ -42,18 +41,18 @@ class Network:
         # Code (paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
 
         skip = True if opt.skip > 0 else False
-        self.netG_A = define_G(opt, Use_GPUs, skip=skip)
+        self.netG_A = define_G(opt, skip=skip)
         # self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
         #                                 opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, self.gpu_ids,
         #                                 skip=False, opt=opt)
 
         if self.opt.isTrain:
             self.netD_A = define_D(opt.output_nc, opt.ndf, opt.which_model_netD, opt,
-                                   opt.n_layers_D, opt.norm, gpu_ids=Use_GPUs, patch=False)
+                                   opt.n_layers_D, opt.norm)
             if self.opt.patchD:
                 self.netD_P = define_D(opt.input_nc, opt.ndf,
                                        opt.which_model_netD, opt,
-                                       opt.n_layers_patchD, opt.norm, gpu_ids=Use_GPUs, patch=True)
+                                       opt.n_layers_patchD, opt.norm)
         if not self.opt.isTrain or self.opt.continue_train:
             # According to Discrete Math, this means train -> continue_train.
             which_epoch = opt.which_epoch
@@ -465,10 +464,10 @@ class Network:
                                     ('self_attention', self_attention)])
 
     def save(self, label):
-        self.save_network(self.netG_A, 'G_A', label, self.gpu_ids)
-        self.save_network(self.netD_A, 'D_A', label, self.gpu_ids)
+        self.save_network(self.netG_A, 'G_A', label)
+        self.save_network(self.netD_A, 'D_A', label)
         if self.opt.patchD:
-            self.save_network(self.netD_P, 'D_P', label, self.gpu_ids)
+            self.save_network(self.netD_P, 'D_P', label)
         # self.save_network(self.netG_B, 'G_B', label, self.gpu_ids)
         # self.save_network(self.netD_B, 'D_B', label, self.gpu_ids)
 
@@ -490,17 +489,17 @@ class Network:
         print('update learning rate: %f -> %f' % (self.old_lr, lr))
         self.old_lr = lr
 
-    def save_network(self, network, network_label, epoch_label, gpu_ids):
+    def save_network(self, network, network_label, epoch_label):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
         torch.save(network.cpu().state_dict(), save_path)
-        if len(gpu_ids) and torch.cuda.is_available():
-            network.cuda()
+        if opt.use_gpu:
+            network.cuda(device=opt.gpu_id)
 
     def load_network(self, network, network_label, epoch_label):
         save_filename = '%s_net_%s.pth' % (epoch_label, network_label)
         save_path = os.path.join(self.save_dir, save_filename)
         if opt.use_gpu:
-            network.load_state_dict(torch.load(save_path, map_location='cuda:' + str(opt.gpu_id[0])))
+            network.load_state_dict(torch.load(save_path, map_location='cuda:' + str(opt.gpu_id)))
         else:
             network.load_state_dict(torch.load(save_path, map_location='cpu'))

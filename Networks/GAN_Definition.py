@@ -6,37 +6,28 @@ from Networks.Discriminator import *
 
 
 
-def define_G(opt, gpu_ids=[], skip=False):
-    netG = None
-    use_gpu = opt.use_gpu
-
-    if use_gpu:
-        assert (torch.cuda.is_available())
+def define_G(opt, skip=False):
 
     netG = Unet_resize_conv(opt, skip)
 
-    if len(gpu_ids) > 0 and opt.use_gpu:
-        netG.cuda()
-        netG = torch.nn.DataParallel(netG, gpu_ids)
+    if opt.use_gpu:
+        netG.cuda(device=opt.gpu_id)
     netG.apply(weights_init)
     return netG
 
 
-def define_D(input_nc, ndf, which_model_netD, opt,
-             n_layers_D=3, norm='batch', use_sigmoid=False, gpu_ids=[], patch=False):
+def define_D(input_nc, ndf, which_model_netD, opt, n_layers_D=3, norm='batch', use_sigmoid=False):
     netD = None
     norm_layer = get_norm_layer(norm_type=norm)
 
     if opt.use_gpu:
         assert (torch.cuda.is_available())
     if which_model_netD == 'n_layers':
-        netD = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer, use_sigmoid=use_sigmoid,
-                                   gpu_ids=gpu_ids)
+        netD = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer, use_sigmoid=use_sigmoid)
     elif which_model_netD == 'no_norm':
-        netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid, gpu_ids=gpu_ids)
+        netD = NoNormDiscriminator(input_nc, ndf, n_layers_D, use_sigmoid=use_sigmoid)
     if opt.use_gpu:
-        netD.cuda()
-        netD = torch.nn.DataParallel(netD, gpu_ids)
+        netD.cuda(device=opt.gpu_id)
     netD.apply(weights_init)
     return netD
 
@@ -61,14 +52,14 @@ class GANLoss(nn.Module):
             create_label = ((self.real_label_var is None) or
                             (self.real_label_var.numel() != input.numel()))
             if create_label:
-                real_tensor = self.Tensor(input.size()).fill_(self.real_label)
+                real_tensor = self.Tensor(input.size()).fill_(self.real_label).cuda(device=opt.gpu_id)
                 self.real_label_var = Variable(real_tensor, requires_grad=False)
             target_tensor = self.real_label_var
         else:
             create_label = ((self.fake_label_var is None) or
                             (self.fake_label_var.numel() != input.numel()))
             if create_label:
-                fake_tensor = self.Tensor(input.size()).fill_(self.fake_label)
+                fake_tensor = self.Tensor(input.size()).fill_(self.fake_label).cuda(device=opt.gpu_id)
                 self.fake_label_var = Variable(fake_tensor, requires_grad=False)
             target_tensor = self.fake_label_var
         return target_tensor
@@ -97,17 +88,17 @@ class DiscLossWGANGP:
     def calc_gradient_penalty(self, netD, real_data, fake_data):
         alpha = torch.rand(1, 1)
         alpha = alpha.expand(real_data.size())
-        alpha = alpha.cuda()
+        alpha = alpha.cuda(device=opt.gpu_id)
 
         interpolates = alpha * real_data + ((1 - alpha) * fake_data)
 
-        interpolates = interpolates.cuda()
+        interpolates = interpolates.cuda(device=opt.gpu_id)
         interpolates = Variable(interpolates, requires_grad=True)
 
         disc_interpolates = netD.forward(interpolates)
 
         gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                                        grad_outputs=torch.ones(disc_interpolates.size()).cuda(),
+                                        grad_outputs=torch.ones(disc_interpolates.size()).cuda(device=opt.gpu_id),
                                         create_graph=True, retain_graph=True, only_inputs=True)[0]
 
         gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * self.LAMBDA

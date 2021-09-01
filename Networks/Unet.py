@@ -6,9 +6,8 @@ import torch.nn as nn
 # at the bottleneck
 class UnetGenerator(nn.Module):
     def __init__(self, input_nc, output_nc, num_downs, ngf=64,
-                 norm_layer=nn.BatchNorm2d, use_dropout=False, gpu_ids=[], skip=False, opt=None):
+                 norm_layer=nn.BatchNorm2d, use_dropout=False, skip=False, opt=None):
         super(UnetGenerator, self).__init__()
-        self.gpu_ids = gpu_ids
         self.opt = opt
         # currently support only input_nc == output_nc
         assert (input_nc == output_nc)
@@ -34,10 +33,10 @@ class UnetGenerator(nn.Module):
             self.model = unet_block
 
     def forward(self, input):
-        if GPU_IDs and isinstance(input.data, torch.cuda.FloatTensor):
-            return nn.parallel.data_parallel(self.model, input, GPU_IDs)
-        else:
-            return self.model(input)
+        # if GPU_IDs and isinstance(input.data, torch.cuda.FloatTensor):
+        #     return nn.parallel.data_parallel(self.model, input, GPU_IDs)
+        # else:
+        return self.model(input)
 
 
 class SkipModule(nn.Module):

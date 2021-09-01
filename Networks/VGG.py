@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-def load_vgg16(opt, model_dir, gpu_ids):
+def load_vgg16(opt, model_dir):
     """ Use the model from https://github.com/abhiskk/fast-neural-style/blob/master/neural_style/utils.py """
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -16,11 +16,10 @@ def load_vgg16(opt, model_dir, gpu_ids):
     vgg = Vgg16()
     # vgg.cuda()
     if opt.use_gpu:
-        vgg.cuda()
-        vgg.load_state_dict(torch.load(os.path.join(model_dir, 'vgg16.weight'), map_location='cuda:' + str(opt.gpu_id[0])))
+        vgg.cuda(device=opt.gpu_id)
+        vgg.load_state_dict(torch.load(os.path.join(model_dir, 'vgg16.weight'), map_location='cuda:' + str(opt.gpu_id)))
     else:
         vgg.load_state_dict(torch.load(os.path.join(model_dir, 'vgg16.weight'), map_location='cpu'))
-    vgg = torch.nn.DataParallel(vgg, gpu_ids)
     return vgg
 
 
