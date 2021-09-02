@@ -87,7 +87,7 @@ def train(mode: int):
                 GAN_Network.update_learning_rate()
 
 
-def predict(image_path_list: list, user_ip: str, isWeb=False):
+def predict(image_path_list: list, user_ip: str, isWeb=False, save_dir=''):
     imgs = []
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -109,19 +109,23 @@ def predict(image_path_list: list, user_ip: str, isWeb=False):
         print('process image %s' % data[2])
         short_path = ntpath.basename(data[2])
         name = os.path.splitext(short_path)[0]
-        if isWeb:
-            image_dir = os.path.join(ROOT_PATH, 'front-end', 'Static_Files', 'downloads', user_ip)
+        if not opt.use_models:
+            if isWeb:
+                image_dir = os.path.join(ROOT_PATH, 'front-end', 'Static_Files', 'downloads', user_ip)
+            else:
+                image_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
         else:
-            image_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
+            image_dir = os.path.join(save_dir)
         for label, image_numpy in visuals.items():
-            utils.save_image(image_numpy, image_dir, name, label)
+            utils.save_image(image_numpy, image_dir, name, label, isWeb)
 
 
 if __name__ == '__main__':
     if opt.train:
         train(mode=0)
     elif opt.predict:
-        image_dir = os.path.join(os.path.join(ROOT_PATH, 'Data'), 'Test_data')
+        image_dir = os.path.join(ROOT_PATH, 'Data', 'Test_data')
+        image_result_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
         image_path_list = []
         for file_name in os.listdir(image_dir):
             file_path = os.path.join(image_dir, file_name)
@@ -129,10 +133,10 @@ if __name__ == '__main__':
         if opt.use_models:
             for iteration in range(100, 500 + 5, 5):
                 opt.which_epoch = str(iteration)
-                save_image_path = os.path.join(image_dir, '%s' % iteration)
+                save_image_path = os.path.join(image_result_dir, '%s' % iteration)
                 if not os.path.exists(save_image_path):
                     os.mkdir(save_image_path)
-                predict(image_path_list=image_path_list, user_ip="", isWeb=False)
+                predict(image_path_list=image_path_list, user_ip="", isWeb=False, save_dir=save_image_path)
         else:
             predict(image_path_list=image_path_list, user_ip="", isWeb=False)
     elif opt.continue_train:
