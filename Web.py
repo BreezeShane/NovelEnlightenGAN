@@ -61,6 +61,9 @@ def start_predict():
     try:
         predict(file_paths, user_ip, isWeb=True)
     except RuntimeError:
+        print('=' * 64)
+        print(RuntimeError)
+        print('*' * 64)
         Error = "当前有其他用户正在使用，请稍后再试！"
         data = {'Status': 'Error', 'Message': Error, 'file_url': []}
         return json.dumps(data)
