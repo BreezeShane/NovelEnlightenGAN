@@ -106,3 +106,7 @@ if __name__ == '__main__':
 # todo: fix up the bug:
 #  When user secondly upload data the same to the first,
 #  uploaded images won't be deployed.
+
+# todo: Add up the message Queue.
+
+# todo: Add the class able to cut the pic to patches.
