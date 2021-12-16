@@ -82,3 +82,4 @@ class PreProcessor:
         # restored_img = Image.fromarray(np.unit8(tmp_img_container).convert('RGB'))
         restored_img = Image.fromarray(tmp_img_container.astype('uint8'), 'RGB')
         return restored_img
+
