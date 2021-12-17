@@ -3,7 +3,7 @@ import ntpath
 from Config import *
 from PIL import Image
 from torchvision import transforms
-from utils import data_loader, utils
+from utils import data_loader, utils, preprocessor
 from Networks import EnlightenGAN_Network
 from torch.utils.tensorboard import SummaryWriter
 
@@ -88,36 +88,51 @@ def train(mode: int):
 
 
 def predict(image_path_list: list, user_ip: str, isWeb=False, save_dir=''):
-    imgs = []
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
-    for image_path in image_path_list:
-        img = Image.open(image_path).convert('RGB')
-        img = transform(img)
-        img_input = torch.unsqueeze(img, 0)
-        r, g, b = img[0] + 1, img[1] + 1, img[2] + 1
-        gray = 1. - (0.299 * r + 0.587 * g + 0.114 * b) / 2.
-        gray = torch.unsqueeze(gray, 0).unsqueeze(0)
-        img_with_gray_and_path = [img_input, gray, image_path]
-        imgs.append(img_with_gray_and_path)
+    img_processor = preprocessor.PreProcessor(channels=3)
     GAN_Network = EnlightenGAN_Network.Network()
-    for data in imgs:
-        GAN_Network.set_input_single(data)
-        visuals = GAN_Network.predict()
-        print('process image %s' % data[2])
-        short_path = ntpath.basename(data[2])
-        name = os.path.splitext(short_path)[0]
+    for image_path in image_path_list:
+        img_patch_list = []
+        img_processor.clear_container()
+        img = Image.open(image_path).convert('RGB')
+        img_patch_list = img_processor(img)
+        img_patches_with_gray_and_path = []
+        for patch_img in img_patch_list:
+            patch_img = transform(patch_img)
+            img_input = torch.unsqueeze(patch_img, 0)
+            r, g, b = patch_img[0] + 1, patch_img[1] + 1, patch_img[2] + 1
+            gray = 1. - (0.299 * r + 0.587 * g + 0.114 * b) / 2.
+            gray = torch.unsqueeze(gray, 0).unsqueeze(0)
+            patch_img_with_gray_and_path = [img_input, gray, image_path]
+            img_patches_with_gray_and_path.append(patch_img_with_gray_and_path)
+        restore_imgs_list = []
+        label = name = None
+        output_info = True
+        for data in img_patches_with_gray_and_path:
+            GAN_Network.set_input_single(data)
+            visuals = GAN_Network.predict()
+            if output_info:
+                print('process image %s' % data[2])
+                short_path = ntpath.basename(data[2])
+                name = os.path.splitext(short_path)[0]
+                output_info = False
+            for label, image_numpy in visuals.items():
+                restore_imgs_list.append(image_numpy)
+        img_processor.clear_container()
+        for item in restore_imgs_list:
+            img_processor.add_to_container(item)
+        restored_img = img_processor.restore_picture(output_type='rgb')
         if not opt.use_models:
             if isWeb:
-                image_dir = os.path.join(ROOT_PATH, 'front-end', 'Static_Files', 'downloads', user_ip)
+                image_root_path = os.path.join(ROOT_PATH, 'front-end', 'Static_Files', 'downloads', user_ip)
             else:
-                image_dir = os.path.join(ROOT_PATH, 'Data', 'Result')
+                image_root_path = os.path.join(ROOT_PATH, 'Data', 'Result')
         else:
-            image_dir = os.path.join(save_dir)
-        for label, image_numpy in visuals.items():
-            utils.save_image(image_numpy, image_dir, name, label, isWeb)
+            image_root_path = os.path.join(save_dir)
+        utils.save_image(restored_img, image_root_path, name, label, isWeb)
 
 
 if __name__ == '__main__':

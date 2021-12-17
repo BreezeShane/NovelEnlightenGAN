@@ -121,10 +121,13 @@ def latent2im(image_tensor, imtype=np.uint8):
     return image_numpy.astype(imtype)
 
 
-def save_image(image_numpy, image_dir, name, label, isWeb=True):
+def save_image(image, image_dir, name, label, isWeb=True):
     image_name = '%s_%s.png' % (name, label)
     save_path = os.path.join(image_dir, image_name)
-    image_pil = Image.fromarray(image_numpy)
+    if type(image) is np.ndarray:
+        image_pil = Image.fromarray(image)
+    else:
+        image_pil = image
     image_pil.save(save_path)
     if isWeb:
         image_2deploy_name = '%s_%s_2deploy.png' % (name, label)
@@ -134,7 +137,6 @@ def save_image(image_numpy, image_dir, name, label, isWeb=True):
 
 
 # Network Utils
-
 def get_norm_layer(norm_type='instance'):
     if norm_type == 'batch':
         norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
