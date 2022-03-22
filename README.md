@@ -45,5 +45,3 @@ For more attributes you can edit, please read [Config.py](./Config.py) to choose
 ## Where is it from ?
 
 It comes from [here](https://github.com/VITA-Group/EnlightenGAN). And the original belongs to the team [VITA Group](https://github.com/VITA-Group). I just rebuild the project and am attempting to propose a better method to improve it !
-
-Well, I still fail to think out such a method......
