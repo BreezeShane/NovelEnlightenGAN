@@ -1,8 +1,10 @@
 # Novel Enlighten GAN
 
-§ Warning
+## § Warning
 
 I've given up ML and so the repo now is unmaintained and unsupported.
+
+---
 
 To use the project, please install the packages.
 ```yaml
