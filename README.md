@@ -1,5 +1,9 @@
 # Novel Enlighten GAN
 
+§ Warning
+
+I've given up ML and so the repo now is unmaintained and unsupported.
+
 To use the project, please install the packages.
 ```yaml
 torch~=1.9.0
